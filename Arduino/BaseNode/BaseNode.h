@@ -1,12 +1,12 @@
-#ifndef ___EXTENSION_MODULE_BASE__HPP___
-#define ___EXTENSION_MODULE_BASE__HPP___
+#ifndef ___BASE_NODE__H___
+#define ___BASE_NODE__H___
 
 #include "Arduino.h"
 #include <Wire.h>
 #include <stdint.h>
 
 
-class ExtensionModuleBase {
+class BaseNode {
 public:
   struct Version {
       uint16_t major;
@@ -48,7 +48,7 @@ public:
   static void handle_wire_receive(int n_bytes);
   static void handle_wire_request();
   
-  ExtensionModuleBase() { debug_ = false; }
+  BaseNode() { debug_ = false; }
   virtual void begin();
   // local accessors
   const char* name() { return prog_string(NAME_); }
@@ -111,4 +111,4 @@ protected:
   bool debug_;
 };
 
-#endif // ___EXTENSION_MODULE_BASE__HPP___
+#endif // ___BASE_NODE__H___

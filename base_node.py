@@ -21,7 +21,7 @@ RETURN_BAD_CRC =               0x07;
 RETURN_BAD_VALUE =             0x08;
 RETURN_MAX_PAYLOAD_EXCEEDED =  0x09;
 
-class ExtensionModule():
+class BaseNode():
     def __init__(self, control_board, address):
         self.control_board = control_board
         self.address = address

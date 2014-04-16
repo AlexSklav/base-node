@@ -4,22 +4,22 @@
 #include <SPI.h>
 #include <Wire.h>
 
-#include "ExtensionModuleBase.h"
+#include "BaseNode.h"
 
 #define P(str) (strcpy_P(p_buffer_, PSTR(str)), p_buffer_)
 
 
 // initialize static members
-bool ExtensionModuleBase::send_payload_length_ = false;
-uint8_t ExtensionModuleBase::cmd_ = 0;
-uint16_t ExtensionModuleBase::bytes_read_ = 0;
-uint16_t ExtensionModuleBase::bytes_written_ = 0;
-uint16_t ExtensionModuleBase::payload_length_ = 0;
-bool ExtensionModuleBase::wire_command_received_ = false;
-char ExtensionModuleBase::buffer_[MAX_PAYLOAD_LENGTH];
-char ExtensionModuleBase::p_buffer_[100];
+bool BaseNode::send_payload_length_ = false;
+uint8_t BaseNode::cmd_ = 0;
+uint16_t BaseNode::bytes_read_ = 0;
+uint16_t BaseNode::bytes_written_ = 0;
+uint16_t BaseNode::payload_length_ = 0;
+bool BaseNode::wire_command_received_ = false;
+char BaseNode::buffer_[MAX_PAYLOAD_LENGTH];
+char BaseNode::p_buffer_[100];
 
-void ExtensionModuleBase::handle_wire_receive(int n_bytes) {
+void BaseNode::handle_wire_receive(int n_bytes) {
   cmd_ = Wire.read();
   n_bytes--;
   payload_length_ = n_bytes;
@@ -31,7 +31,7 @@ void ExtensionModuleBase::handle_wire_receive(int n_bytes) {
   wire_command_received_ = true;
 }
 
-void ExtensionModuleBase::handle_wire_request() {
+void BaseNode::handle_wire_request() {
   if (send_payload_length_) {
     Wire.write((uint8_t*)&bytes_written_,
                sizeof(bytes_written_));
@@ -42,7 +42,7 @@ void ExtensionModuleBase::handle_wire_request() {
 }
 
 /* Initialize the communications for the extension module. */
-void ExtensionModuleBase::begin() {
+void BaseNode::begin() {
     SPI.setBitOrder(MSBFIRST);
     SPI.setDataMode(SPI_MODE0);
     SPI.begin();
@@ -53,7 +53,7 @@ void ExtensionModuleBase::begin() {
     Wire.onReceive(handle_wire_receive);
 }
 
-bool ExtensionModuleBase::read_serial_command() {
+bool BaseNode::read_serial_command() {
     if (Serial.available()) {
         byte len = Serial.readBytesUntil('\n', buffer_,
                                          sizeof(buffer_));
@@ -64,7 +64,7 @@ bool ExtensionModuleBase::read_serial_command() {
 }
 
 /* Process any available requests on the serial port, or through Wire/I2C. */
-void ExtensionModuleBase::listen() {
+void BaseNode::listen() {
     if (read_serial_command()) {
         // A new-line-terminated command was successfully read into the buffer.
         // Call `ProcessSerialInput` to handle process command string.
@@ -85,7 +85,7 @@ void ExtensionModuleBase::listen() {
 }
 
 /* Write a sequence of `size` bytes to the buffer. */
-void ExtensionModuleBase::serialize(const uint8_t* u, const uint16_t size) {
+void BaseNode::serialize(const uint8_t* u, const uint16_t size) {
     for (uint16_t i = 0; i < size; i++) {
       buffer_[bytes_written_+i] = u[i];
     }
@@ -93,7 +93,7 @@ void ExtensionModuleBase::serialize(const uint8_t* u, const uint16_t size) {
 }
 
 /* Print the configuration of the extension module to the serial port. */
-void ExtensionModuleBase::dump_config() {
+void BaseNode::dump_config() {
     Serial.println(String(name()) + " v" + String(hardware_version()));
     Serial.println(P("Firmware v") + String(software_version()));
     Serial.println(url());
@@ -103,7 +103,7 @@ void ExtensionModuleBase::dump_config() {
 }
 
 /* If there is a request pending on the serial port, process it. */
-bool ExtensionModuleBase::process_serial_input() {
+bool BaseNode::process_serial_input() {
     if (match_function(P("reset_config()"))) {
         load_config(true);
         dump_config();
@@ -123,15 +123,15 @@ bool ExtensionModuleBase::process_serial_input() {
     return false;
 }
 
-int32_t ExtensionModuleBase::read_int_from_serial() {
+int32_t BaseNode::read_int_from_serial() {
   return atoi(buffer_ + bytes_read_);
 }
 
-float ExtensionModuleBase::read_float_from_serial() {
+float BaseNode::read_float_from_serial() {
   return atof(buffer_ + bytes_read_);
 }
 
-bool ExtensionModuleBase::match_function(const char* function_name) {
+bool BaseNode::match_function(const char* function_name) {
   if (strstr(buffer_, "()")) {
     return strcmp(buffer_, function_name)==0;
   } else {
@@ -149,7 +149,7 @@ bool ExtensionModuleBase::match_function(const char* function_name) {
 
 
 /* If there is a request pending from the I2C bus, process it. */
-void ExtensionModuleBase::process_wire_command() {
+void BaseNode::process_wire_command() {
   switch (cmd_) {
   case CMD_GET_PROTOCOL_NAME:
     if (payload_length_ == 0) {
@@ -212,11 +212,11 @@ void ExtensionModuleBase::process_wire_command() {
   }
 }
 
-void ExtensionModuleBase::error(uint8_t code) {
+void BaseNode::error(uint8_t code) {
   Serial.println(P("Error ") + String(code, DEC));
 }
 
-bool ExtensionModuleBase::next_int(char* &str, int32_t &value) {
+bool BaseNode::next_int(char* &str, int32_t &value) {
   char* end = strstr(str, ",");
   if (end==NULL) {
     end = strstr(str, ")");
@@ -232,19 +232,19 @@ bool ExtensionModuleBase::next_int(char* &str, int32_t &value) {
   return true;
 }
 
-String ExtensionModuleBase::version_string(Version version) {
+String BaseNode::version_string(Version version) {
   return String(version.major) + "." + String(version.minor) + "." +
          String(version.micro);
 }
 
-ExtensionModuleBase::Version ExtensionModuleBase::config_version() {
+BaseNode::Version BaseNode::config_version() {
   Version config_version;
   eeprom_read_block((void*)&config_version, (void*)EEPROM_CONFIG_SETTINGS,
                     sizeof(config_version));
   return config_version;
 }
 
-void ExtensionModuleBase::load_config(bool use_defaults) {
+void BaseNode::load_config(bool use_defaults) {
   eeprom_read_block((void*)&config_settings_,
                     (void*)EEPROM_CONFIG_SETTINGS, sizeof(config_settings_));
 
@@ -263,15 +263,16 @@ void ExtensionModuleBase::load_config(bool use_defaults) {
   Wire.begin(config_settings_.i2c_address);
 }
 
-void ExtensionModuleBase::save_config() {
+void BaseNode::save_config() {
   eeprom_write_block((void*)&config_settings_,
                      (void*)EEPROM_CONFIG_SETTINGS, sizeof(config_settings_));
 }
 
-void ExtensionModuleBase::set_i2c_address(uint8_t address) {
+void BaseNode::set_i2c_address(uint8_t address) {
   config_settings_.i2c_address = address;
   Wire.begin(config_settings_.i2c_address);
   Serial.println(P("i2c_address=") + String(config_settings_.i2c_address,
                  DEC));
   save_config();
 }
+
