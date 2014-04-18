@@ -25,7 +25,7 @@ def get_includes():
 
         import base_node
         ...
-        print ' '.join(['-I%s' % i for i in cyvpr.get_includes()])
+        print ' '.join(['-I%s' % i for i in base_node.get_includes()])
         ...
 
     '''
