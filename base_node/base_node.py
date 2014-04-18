@@ -23,8 +23,8 @@ RETURN_MAX_PAYLOAD_EXCEEDED = 0x09
 
 
 class BaseNode():
-    def __init__(self, control_board, address):
-        self.control_board = control_board
+    def __init__(self, proxy, address):
+        self.proxy = proxy 
         self.address = address
         self.write_buffer = []
 
@@ -50,8 +50,8 @@ class BaseNode():
         return self._get_string(CMD_GET_URL)
 
     def send_command(self, cmd):
-        self.data = (self.control_board.i2c_send_command(self.address, cmd,
-                                                         self.write_buffer)
+        self.data = (self.proxy.i2c_send_command(self.address, cmd,
+                                                 self.write_buffer)
                      .tolist())
         self.write_buffer = []
 
