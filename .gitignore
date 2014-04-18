@@ -1,4 +1,5 @@
-build
+RELEASE-VERSION
+*.egg-info
 *.hex
 *.pyc
 .ropeproject
