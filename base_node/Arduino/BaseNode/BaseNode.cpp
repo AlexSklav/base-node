@@ -1,7 +1,6 @@
 #include "Arduino.h"
 #include <avr/eeprom.h>
 #include <math.h>
-#include <SPI.h>
 #include <Wire.h>
 
 #include "BaseNode.h"
@@ -43,9 +42,10 @@ void BaseNode::handle_wire_request() {
 
 /* Initialize the communications for the extension module. */
 void BaseNode::begin() {
-    SPI.setBitOrder(MSBFIRST);
-    SPI.setDataMode(SPI_MODE0);
-    SPI.begin();
+    // The reset latch is used for programming over the communictions bus.
+    // Pull it low to enter programming mode.
+    pinMode(RESET_LATCH, OUTPUT);
+    digitalWrite(RESET_LATCH, HIGH);
     Serial.begin(115200);
     load_config();
     dump_config();

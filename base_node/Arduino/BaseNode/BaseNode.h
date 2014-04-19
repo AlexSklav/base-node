@@ -8,6 +8,8 @@
 
 class BaseNode {
 public:
+  static const uint8_t RESET_LATCH = 7;
+
   struct Version {
       uint16_t major;
       uint16_t minor;
