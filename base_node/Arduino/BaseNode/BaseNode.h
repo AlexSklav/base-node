@@ -89,11 +89,11 @@ protected:
     bytes_read_ += size;
     return result;
   }
-  int32_t read_int_from_serial();
-  float read_float_from_serial();
 
   String version_string(Version version);
-  bool next_int(char* &str, int32_t &value);
+  bool read_value(char* &str, char* &end);
+  bool read_int(int32_t &value);
+  bool read_float(float &value);
   bool read_serial_command();
   void error(uint8_t code);
   void dump_config();

@@ -54,33 +54,33 @@ void BaseNode::begin() {
 }
 
 bool BaseNode::read_serial_command() {
-    if (Serial.available()) {
-        byte len = Serial.readBytesUntil('\n', buffer_,
-                                         sizeof(buffer_));
-        buffer_[len]=0;
-        return true;
-    }
-    return false;
+  if (Serial.available()) {
+    byte len = Serial.readBytesUntil('\n', buffer_,
+                                     sizeof(buffer_));
+    buffer_[len] = 0;
+    bytes_read_ = 0;
+    return true;
+  }
+  return false;
 }
 
 /* Process any available requests on the serial port, or through Wire/I2C. */
 void BaseNode::listen() {
-    if (read_serial_command()) {
-        // A new-line-terminated command was successfully read into the buffer.
-        // Call `ProcessSerialInput` to handle process command string.
-        if (!process_serial_input()) {
-            // Command was not handled.
-            error(1);
-        }
+  if (read_serial_command()) {
+    // A new-line-terminated command was successfully read into the buffer.
+    // Call `ProcessSerialInput` to handle process command string.
+    if (!process_serial_input()) {
+      error(RETURN_UNKNOWN_COMMAND);
     }
-    if (wire_command_received_) {
-      bytes_written_ = 0;
-      bytes_read_ = 0;
-      send_payload_length_ = true;
-      return_code_ = RETURN_GENERAL_ERROR;
-      process_wire_command();
-      serialize(&return_code_, sizeof(return_code_));
-      wire_command_received_ = false;
+  }
+  if (wire_command_received_) {
+    bytes_written_ = 0;
+    bytes_read_ = 0;
+    send_payload_length_ = true;
+    return_code_ = RETURN_GENERAL_ERROR;
+    process_wire_command();
+    serialize(&return_code_, sizeof(return_code_));
+    wire_command_received_ = false;
     }
 }
 
@@ -116,19 +116,14 @@ bool BaseNode::process_serial_input() {
     }
 
     if (match_function(P("set_i2c_address("))) {
-      set_i2c_address(read_int_from_serial());
+      int32_t value;
+      if (read_int(value)) {
+        set_i2c_address(value);
+      }
       return true;
     }
     /* Command was not processed */
     return false;
-}
-
-int32_t BaseNode::read_int_from_serial() {
-  return atoi(buffer_ + bytes_read_);
-}
-
-float BaseNode::read_float_from_serial() {
-  return atof(buffer_ + bytes_read_);
 }
 
 bool BaseNode::match_function(const char* function_name) {
@@ -146,7 +141,6 @@ bool BaseNode::match_function(const char* function_name) {
     }
   }
 }
-
 
 /* If there is a request pending from the I2C bus, process it. */
 void BaseNode::process_wire_command() {
@@ -216,20 +210,48 @@ void BaseNode::error(uint8_t code) {
   Serial.println(P("Error ") + String(code, DEC));
 }
 
-bool BaseNode::next_int(char* &str, int32_t &value) {
-  char* end = strstr(str, ",");
-  if (end==NULL) {
-    end = strstr(str, ")");
+bool BaseNode::read_int(int32_t &value) {
+  char* str;
+  char* end;
+  if (read_value(str, end)) {
+    char val_str[end - str + 1];
+    memcpy(val_str, str, end - str);
+    val_str[end - str] = 0;
+    value = atoi(val_str);
+    return true;
   }
-  if (end==NULL) {
-    return false;
+  return false;
+}
+
+bool BaseNode::read_float(float &value) {
+  char* str;
+  char* end;
+  if (read_value(str, end)) {
+    char val_str[end - str + 1];
+    memcpy(val_str, str, end - str);
+    val_str[end - str] = 0;
+    value = atof(val_str);
+    return true;
   }
-  char num_str[end - str + 1];
-  memcpy(num_str, str, end - str);
-  num_str[end - str] = 0;
-  str = end + 1;
-  value = atoi(num_str);
-  return true;
+  return false;
+}
+
+bool BaseNode::read_value(char* &str, char* &end) {
+  str = buffer_ + bytes_read_;
+  end = strstr(str, ",");
+  uint8_t len;
+  if (end==NULL) { // no comma (convert whole string)
+    len = strlen(str);
+    end = str + len;
+  } else { // convert up to (and including) comma
+    len = end - str + 1;
+  }
+  if (len > 0) {
+    bytes_read_ += len;
+    return true;
+  }
+  error(RETURN_BAD_VALUE);
+  return false;
 }
 
 String BaseNode::version_string(Version version) {
