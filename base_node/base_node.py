@@ -64,6 +64,11 @@ class BaseNode():
         self.data = self.data[4:]
         return unpack('f', pack('BBBB', *num))[0]
 
+    def read_uint16(self):
+        num = self.data[0:2]
+        self.data = self.data[2:]
+        return unpack('H', pack('BB', *num))[0]
+
     def read_uint8(self):
         return self.data.pop(0)
 
