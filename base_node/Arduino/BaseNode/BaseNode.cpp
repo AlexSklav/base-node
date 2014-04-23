@@ -44,8 +44,8 @@ void BaseNode::handle_wire_request() {
 void BaseNode::begin() {
     // The reset latch is used for programming over the communictions bus.
     // Pull it low to enter programming mode.
-    pinMode(RESET_LATCH, OUTPUT);
     digitalWrite(RESET_LATCH, HIGH);
+    pinMode(RESET_LATCH, OUTPUT);
     Serial.begin(115200);
     load_config();
     dump_config();
@@ -81,7 +81,15 @@ void BaseNode::listen() {
     process_wire_command();
     serialize(&return_code_, sizeof(return_code_));
     wire_command_received_ = false;
+
+    // If this command is changing the programming mode, wait for
+    // a specified delay before setting/resetting the latch; otherwise,
+    // the i2c communication will interfere.
+    if (cmd_ == CMD_SET_PROGRAMMING_MODE) {
+      delay(1000);
+      update_programming_mode_state();
     }
+  }
 }
 
 /* Write a sequence of `size` bytes to the buffer. */
@@ -100,6 +108,28 @@ void BaseNode::dump_config() {
     Serial.println(P("config_version=") + version_string(config_version()));
     Serial.println(P("i2c_address=") +
                    String(config_settings_.i2c_address, DEC));
+    Serial.println(P("programming_mode=") +
+                   String(config_settings_.programming_mode, DEC));
+}
+
+void BaseNode::set_programming_mode(bool on) {
+  config_settings_.programming_mode = on;
+  Serial.println(P("programming_mode=") +
+                 String(config_settings_.programming_mode, DEC));
+  save_config();
+}
+
+void BaseNode::update_programming_mode_state() {
+  if (config_settings_.programming_mode == 0) {
+    // pull SDA low to reset latch
+    pinMode(A5, OUTPUT);
+    digitalWrite(A5, LOW);
+    pinMode(A5, INPUT);
+  } else {
+    // set latch
+    digitalWrite(RESET_LATCH, LOW);
+    digitalWrite(RESET_LATCH, HIGH);
+  }
 }
 
 /* If there is a request pending on the serial port, process it. */
@@ -119,6 +149,14 @@ bool BaseNode::process_serial_input() {
       int32_t value;
       if (read_int(value)) {
         set_i2c_address(value);
+      }
+      return true;
+    }
+    
+    if (match_function(P("set_programming_mode("))) {
+      int32_t value;
+      if (read_int(value)) {
+        set_programming_mode(value > 0);
       }
       return true;
     }
@@ -196,6 +234,14 @@ void BaseNode::process_wire_command() {
   case CMD_GET_URL:
     if (payload_length_ == 0) {
       serialize(url(), strlen(url()));
+      return_code_ = RETURN_OK;
+    } else {
+      return_code_ = RETURN_BAD_PACKET_SIZE;
+    }
+    break;
+  case CMD_SET_PROGRAMMING_MODE:
+    if (payload_length_ == 1) {
+      set_programming_mode(read<uint8_t>() > 0);
       return_code_ = RETURN_OK;
     } else {
       return_code_ = RETURN_BAD_PACKET_SIZE;
@@ -280,8 +326,10 @@ void BaseNode::load_config(bool use_defaults) {
     config_settings_.version.minor=0;
     config_settings_.version.micro=0;
     config_settings_.i2c_address = 10;
+    config_settings_.programming_mode = 0;
     save_config();
   }
+  update_programming_mode_state();
   Wire.begin(config_settings_.i2c_address);
 }
 

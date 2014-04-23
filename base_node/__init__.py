@@ -64,6 +64,7 @@ CMD_GET_MANUFACTURER        = 0x83
 CMD_GET_HARDWARE_VERSION    = 0x84
 CMD_GET_SOFTWARE_VERSION    = 0x85
 CMD_GET_URL                 = 0x86
+CMD_SET_PROGRAMMING_MODE    = 0x9F
 
 # reserved return codes
 RETURN_OK                   = 0x00
@@ -104,6 +105,10 @@ class BaseNode():
 
     def url(self):
         return self._get_string(CMD_GET_URL)
+
+    def set_programming_mode(self, on):
+        self.write_buffer.append(on)
+        self.send_command(CMD_SET_PROGRAMMING_MODE)
 
     def send_command(self, cmd):
         self.data = (self.proxy.i2c_send_command(self.address, cmd,

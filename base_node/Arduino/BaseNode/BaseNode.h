@@ -19,6 +19,7 @@ public:
   struct ConfigSettings {
       Version version;
       uint8_t i2c_address;
+      uint8_t programming_mode;
   };
 
   // reserved commands
@@ -29,6 +30,7 @@ public:
   static const uint8_t CMD_GET_HARDWARE_VERSION =     0x84;
   static const uint8_t CMD_GET_SOFTWARE_VERSION =     0x85;
   static const uint8_t CMD_GET_URL =                  0x86;
+  static const uint8_t CMD_SET_PROGRAMMING_MODE =     0x9F;
 
   // reserved return codes
   static const uint8_t RETURN_OK =                    0x00;
@@ -79,6 +81,8 @@ public:
 protected:
   virtual void process_wire_command();
   virtual bool process_serial_input();
+  void set_programming_mode(bool on);
+  void update_programming_mode_state();
   ConfigSettings config_settings_;
   uint8_t return_code_;
   template<typename T> void serialize(T data, uint16_t size) {
