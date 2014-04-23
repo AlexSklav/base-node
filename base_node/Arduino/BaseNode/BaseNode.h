@@ -15,7 +15,7 @@ public:
       uint16_t minor;
       uint16_t micro;
   };
-  
+
   struct ConfigSettings {
       Version version;
       uint8_t i2c_address;
@@ -51,10 +51,11 @@ public:
 
   static void handle_wire_receive(int n_bytes);
   static void handle_wire_request();
-  
+
   BaseNode() { debug_ = false; }
   virtual void begin();
   // local accessors
+  const char* prog_string(const char* str) { strcpy_P(buffer_, str); return buffer_; }
   const char* name() { return prog_string(NAME_); }
   const char* hardware_version() { return prog_string(HARDWARE_VERSION_); }
   const char* url() { return prog_string(URL_); }
@@ -62,8 +63,6 @@ public:
   const char* protocol_name() { return prog_string(PROTOCOL_NAME_); }
   const char* protocol_version() { return prog_string(PROTOCOL_VERSION_); }
   const char* manufacturer() { return prog_string(MANUFACTURER_); }
-  const char* prog_string(prog_char* str) { strcpy_P(buffer_, str); return buffer_; }
-
 
   virtual void listen();
   void set_i2c_address(uint8_t address);
@@ -106,14 +105,14 @@ protected:
   void load_config(bool use_defaults=false);
   void save_config();
 
-  static prog_char SOFTWARE_VERSION_[] PROGMEM;
-  static prog_char NAME_[] PROGMEM;
-  static prog_char HARDWARE_VERSION_[] PROGMEM;
-  static prog_char MANUFACTURER_[] PROGMEM;
-  static prog_char URL_[] PROGMEM;
-  static prog_char PROTOCOL_NAME_[] PROGMEM;
-  static prog_char PROTOCOL_VERSION_[] PROGMEM;
-  
+  static const char SOFTWARE_VERSION_[] PROGMEM;
+  static const char NAME_[] PROGMEM;
+  static const char HARDWARE_VERSION_[] PROGMEM;
+  static const char MANUFACTURER_[] PROGMEM;
+  static const char URL_[] PROGMEM;
+  static const char PROTOCOL_NAME_[] PROGMEM;
+  static const char PROTOCOL_VERSION_[] PROGMEM;
+
   bool debug_;
 };
 
