@@ -2,6 +2,8 @@
 #define ___BASE_NODE__H___
 
 #include "Arduino.h"
+#define __PROG_TYPES_COMPAT__
+#include <avr/pgmspace.h>  // `prog_char`
 #include <Wire.h>
 #include <stdint.h>
 
