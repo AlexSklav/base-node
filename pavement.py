@@ -5,7 +5,7 @@ import version
 
 # Setup script for path
 
-setup(name='base_node',
+setup(name='wheeler.base_node',
       version=version.getVersion(),
       description='Common base class/API for embedded hardware devices.',
       author='Ryan Fobel',
