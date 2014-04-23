@@ -25,17 +25,12 @@ def install_as_arduino_library():
     Provided with an Arduino sketchbook home directory, install `BaseNode` as a
     library.
     '''
-    sketch_path = path(base_node.get_sketch_directory())
-    library_path = path(options.sketchbook_home).joinpath('libraries',
-                                                          sketch_path.name)
-    if library_path.exists():
-        if not getattr(options, 'overwrite', False):
-            print 'Library already exists: "%s"' % library_path
-            return
-        else:
-            print 'Removing existing library: "%s"' % library_path
-            library_path.rmtree()
-    sketch_path.copytree(library_path)
+    try:
+        base_node.install_as_arduino_library(options.sketchbook_home,
+                                             getattr(options, 'overwrite',
+                                                     False))
+    except IOError, error:
+        print str(error)
 
 
 @task

@@ -30,7 +30,6 @@ def get_includes():
         ...
 
     '''
-    import base_node
     return [get_sketch_directory()]
 
 
@@ -52,8 +51,25 @@ def get_sources():
         ...
 
     '''
-    import base_node
     return glob.glob(os.path.join(get_sketch_directory(), '*.c*'))
+
+
+def install_as_arduino_library(sketchbook_home, overwrite=False):
+    '''
+    Provided with an Arduino sketchbook home directory, install `BaseNode` as a
+    library.
+    '''
+    from path_helpers import path
+
+    sketch_path = path(get_sketch_directory())
+    library_path = path(sketchbook_home).joinpath('libraries',
+                                                  sketch_path.name)
+    if library_path.exists():
+        if overwrite:
+            library_path.rmtree()
+        else:
+            raise IOError('Library already exists: "%s"' % library_path)
+    sketch_path.copytree(library_path)
 
 
 # command codes
@@ -81,7 +97,7 @@ RETURN_MAX_PAYLOAD_EXCEEDED = 0x09
 
 class BaseNode():
     def __init__(self, proxy, address):
-        self.proxy = proxy 
+        self.proxy = proxy
         self.address = address
         self.write_buffer = []
 
