@@ -114,6 +114,7 @@ void BaseNode::dump_config() {
 
 void BaseNode::set_programming_mode(bool on) {
   config_settings_.programming_mode = on;
+  update_programming_mode_state();
   Serial.println(P("programming_mode=") +
                  String(config_settings_.programming_mode, DEC));
   save_config();
