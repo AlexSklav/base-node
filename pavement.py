@@ -1,8 +1,15 @@
+import os
+import sys
+
 from paver.easy import task, needs, options, cmdopts, path
 from paver.setuputils import setup
 
+# add the current directory as the first listing on the python path
+# so that we import the correct version.py
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 import version
 import base_node
+
 
 # Setup script for path
 

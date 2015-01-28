@@ -3,3 +3,4 @@ RELEASE-VERSION
 *.hex
 *.pyc
 .ropeproject
+setup.py
