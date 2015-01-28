@@ -2,6 +2,7 @@
 #include <avr/eeprom.h>
 #include <math.h>
 #include <Wire.h>
+#include <EEPROM.h>
 
 #include "BaseNode.h"
 
@@ -79,7 +80,9 @@ void BaseNode::listen() {
     send_payload_length_ = true;
     return_code_ = RETURN_GENERAL_ERROR;
     process_wire_command();
-    serialize(&return_code_, sizeof(return_code_));
+    if (send_payload_length_) {
+      serialize(&return_code_, sizeof(return_code_));
+    }
     wire_command_received_ = false;
 
     // If this command is changing the programming mode, wait for
@@ -114,7 +117,6 @@ void BaseNode::dump_config() {
 
 void BaseNode::set_programming_mode(bool on) {
   config_settings_.programming_mode = on;
-  update_programming_mode_state();
   Serial.println(P("programming_mode=") +
                  String(config_settings_.programming_mode, DEC));
   save_config();
@@ -181,6 +183,14 @@ bool BaseNode::match_function(const char* function_name) {
   }
 }
 
+uint8_t BaseNode::persistent_read(uint16_t address) {
+  return EEPROM.read(address);
+}
+
+void BaseNode::persistent_write(uint16_t address, uint8_t value) {
+  EEPROM.write(address, value);
+}
+
 /* If there is a request pending from the I2C bus, process it. */
 void BaseNode::process_wire_command() {
   switch (cmd_) {
@@ -244,6 +254,35 @@ void BaseNode::process_wire_command() {
     if (payload_length_ == 1) {
       set_programming_mode(read<uint8_t>() > 0);
       return_code_ = RETURN_OK;
+    } else {
+      return_code_ = RETURN_BAD_PACKET_SIZE;
+    }
+    break;
+  case CMD_PERSISTENT_READ:
+    if (payload_length_ == 2) {
+      uint16_t address = read<uint16_t>();
+      uint8_t value = persistent_read(address);
+      serialize(&value,sizeof(value));
+      return_code_ = RETURN_OK;
+    } else {
+      return_code_ = RETURN_BAD_PACKET_SIZE;
+    }
+    break;
+  case CMD_PERSISTENT_WRITE:
+    if (payload_length_ == 3) {
+      uint16_t address = read<uint16_t>();
+      uint8_t value = read<uint8_t>();
+      persistent_write(address, value);
+      return_code_ = RETURN_OK;
+    } else {
+      return_code_ = RETURN_BAD_PACKET_SIZE;
+    }
+    break;
+  case CMD_LOAD_CONFIG:
+    if (payload_length_ == 1) {
+      return_code_ = RETURN_OK;
+      bool use_defaults = read<uint8_t>() > 0;
+      load_config(use_defaults);
     } else {
       return_code_ = RETURN_BAD_PACKET_SIZE;
     }

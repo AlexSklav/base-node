@@ -24,6 +24,9 @@ public:
       uint8_t programming_mode;
   };
 
+  // Persistent storage _(e.g., EEPROM)_ addresses.
+  static const uint16_t PERSISTENT_SERIAL_NUMBER_ADDRESS = 8;
+
   // reserved commands
   static const uint8_t CMD_GET_PROTOCOL_NAME =        0x80;
   static const uint8_t CMD_GET_PROTOCOL_VERSION =     0x81;
@@ -32,7 +35,11 @@ public:
   static const uint8_t CMD_GET_HARDWARE_VERSION =     0x84;
   static const uint8_t CMD_GET_SOFTWARE_VERSION =     0x85;
   static const uint8_t CMD_GET_URL =                  0x86;
+  static const uint8_t CMD_PERSISTENT_READ =          0x90;
+  static const uint8_t CMD_PERSISTENT_WRITE =         0x91;
+  static const uint8_t CMD_LOAD_CONFIG =              0x92;
   static const uint8_t CMD_SET_PROGRAMMING_MODE =     0x9F;
+
 
   // reserved return codes
   static const uint8_t RETURN_OK =                    0x00;
@@ -71,6 +78,12 @@ public:
   Version config_version();
   bool match_function(const char* function_name);
   void set_debug(bool debug) { debug_ = debug; }
+  /* The following two `persistent...` methods provide sub-classes a mechanism
+   * to customize persistent storage.  For example, the Arduino DUE does not
+   * support the `EEPROM` library used by the AVR chips. */
+  virtual uint8_t persistent_read(uint16_t address);
+  virtual void persistent_write(uint16_t address, uint8_t value);
+
   static bool send_payload_length_;
   static uint8_t cmd_;
   static uint16_t bytes_read_; // bytes that have been read (by Read methods)
