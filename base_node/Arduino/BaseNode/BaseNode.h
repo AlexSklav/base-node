@@ -18,10 +18,11 @@ public:
       uint16_t micro;
   };
 
-  struct ConfigSettings {
+  struct BaseConfigSettings {
       Version version;
       uint8_t i2c_address;
       uint8_t programming_mode;
+      uint32_t serial_number;
   };
 
   // Persistent storage _(e.g., EEPROM)_ addresses.
@@ -75,7 +76,7 @@ public:
 
   virtual void listen();
   void set_i2c_address(uint8_t address);
-  Version config_version();
+  Version base_config_version();
   bool match_function(const char* function_name);
   void set_debug(bool debug) { debug_ = debug; }
   /* The following two `persistent...` methods provide sub-classes a mechanism
@@ -95,9 +96,11 @@ public:
 protected:
   virtual void process_wire_command();
   virtual bool process_serial_input();
+  // inheritted classes should override this method if they support ISP
+  virtual bool supports_isp() { return false; }
   void set_programming_mode(bool on);
   void update_programming_mode_state();
-  ConfigSettings config_settings_;
+  BaseConfigSettings base_config_settings_;
   uint8_t return_code_;
   template<typename T> void serialize(T data, uint16_t size) {
     serialize((const uint8_t*)data, size); }
@@ -116,9 +119,9 @@ protected:
   bool read_float(float &value);
   bool read_serial_command();
   void error(uint8_t code);
-  void dump_config();
-  void load_config(bool use_defaults=false);
-  void save_config();
+  virtual void dump_config();
+  virtual void load_config(bool use_defaults=false);
+  virtual void save_config();
 
   static const char SOFTWARE_VERSION_[] PROGMEM;
   static const char NAME_[] PROGMEM;

@@ -43,10 +43,12 @@ void BaseNode::handle_wire_request() {
 
 /* Initialize the communications for the extension module. */
 void BaseNode::begin() {
-    // The reset latch is used for programming over the communictions bus.
-    // Pull it low to enter programming mode.
-    digitalWrite(RESET_LATCH, HIGH);
-    pinMode(RESET_LATCH, OUTPUT);
+    if (supports_isp()) {
+      // The reset latch is used for programming over the communictions bus.
+      // Pull it low to enter programming mode.
+      digitalWrite(RESET_LATCH, HIGH);
+      pinMode(RESET_LATCH, OUTPUT);
+    }
     Serial.begin(115200);
     load_config();
     dump_config();
@@ -85,12 +87,14 @@ void BaseNode::listen() {
     }
     wire_command_received_ = false;
 
-    // If this command is changing the programming mode, wait for
-    // a specified delay before setting/resetting the latch; otherwise,
-    // the i2c communication will interfere.
-    if (cmd_ == CMD_SET_PROGRAMMING_MODE) {
-      delay(1000);
-      update_programming_mode_state();
+    if (supports_isp()) {
+      // If this command is changing the programming mode, wait for
+      // a specified delay before setting/resetting the latch; otherwise,
+      // the i2c communication will interfere.
+      if (cmd_ == CMD_SET_PROGRAMMING_MODE) {
+        delay(1000);
+        update_programming_mode_state();
+      }
     }
   }
 }
@@ -108,22 +112,29 @@ void BaseNode::dump_config() {
     Serial.println(String(name()) + " v" + String(hardware_version()));
     Serial.println(P("Firmware v") + String(software_version()));
     Serial.println(url());
-    Serial.println(P("config_version=") + version_string(config_version()));
+    Serial.println(P("base_config_version=") + version_string(base_config_version()));
     Serial.println(P("i2c_address=") +
-                   String(config_settings_.i2c_address, DEC));
+                   String(base_config_settings_.i2c_address, DEC));
     Serial.println(P("programming_mode=") +
-                   String(config_settings_.programming_mode, DEC));
+                   String(base_config_settings_.programming_mode, DEC));
+    Serial.println(P("serial_number=") +
+                   String(base_config_settings_.serial_number, DEC));
+    if (supports_isp()) {
+      Serial.println(P("supports_ISP=true"));
+    } else {
+      Serial.println(P("supports_ISP=false"));
+    }
 }
 
 void BaseNode::set_programming_mode(bool on) {
-  config_settings_.programming_mode = on;
+  base_config_settings_.programming_mode = on;
   Serial.println(P("programming_mode=") +
-                 String(config_settings_.programming_mode, DEC));
+                 String(base_config_settings_.programming_mode, DEC));
   save_config();
 }
 
 void BaseNode::update_programming_mode_state() {
-  if (config_settings_.programming_mode == 0) {
+  if (base_config_settings_.programming_mode == 0) {
     // pull SDA low to reset latch
     pinMode(A5, OUTPUT);
     digitalWrite(A5, LOW);
@@ -155,14 +166,15 @@ bool BaseNode::process_serial_input() {
       }
       return true;
     }
-    
-    if (match_function(P("set_programming_mode("))) {
+
+    if (supports_isp() && match_function(P("set_programming_mode("))) {
       int32_t value;
       if (read_int(value)) {
         set_programming_mode(value > 0);
       }
       return true;
     }
+
     /* Command was not processed */
     return false;
 }
@@ -251,12 +263,16 @@ void BaseNode::process_wire_command() {
     }
     break;
   case CMD_SET_PROGRAMMING_MODE:
-    if (payload_length_ == 1) {
-      set_programming_mode(read<uint8_t>() > 0);
-      return_code_ = RETURN_OK;
+    if (supports_isp()) {
+      if (payload_length_ == 1) {
+        set_programming_mode(read<uint8_t>() > 0);
+        return_code_ = RETURN_OK;
+      } else {
+        return_code_ = RETURN_BAD_PACKET_SIZE;
+      }
     } else {
-      return_code_ = RETURN_BAD_PACKET_SIZE;
-    }
+      return_code_ = RETURN_GENERAL_ERROR;
+    } 
     break;
   case CMD_PERSISTENT_READ:
     if (payload_length_ == 2) {
@@ -345,43 +361,55 @@ String BaseNode::version_string(Version version) {
          String(version.micro);
 }
 
-BaseNode::Version BaseNode::config_version() {
-  Version config_version;
-  eeprom_read_block((void*)&config_version, (void*)EEPROM_CONFIG_SETTINGS,
-                    sizeof(config_version));
-  return config_version;
+BaseNode::Version BaseNode::base_config_version() {
+  Version base_config_version;
+  eeprom_read_block((void*)&base_config_version, (void*)EEPROM_CONFIG_SETTINGS,
+                    sizeof(base_config_version));
+  return base_config_version;
 }
 
 void BaseNode::load_config(bool use_defaults) {
-  eeprom_read_block((void*)&config_settings_,
-                    (void*)EEPROM_CONFIG_SETTINGS, sizeof(config_settings_));
+  eeprom_read_block((void*)&base_config_settings_,
+                    (void*)EEPROM_CONFIG_SETTINGS, sizeof(base_config_settings_));
 
-  // If we're not at the expected version by the end of the upgrade path,
-  // set everything to default values.
-  if (!(config_settings_.version.major==0 &&
-     config_settings_.version.minor==0 &&
-     config_settings_.version.micro==0) || use_defaults) {
-
-    config_settings_.version.major=0;
-    config_settings_.version.minor=0;
-    config_settings_.version.micro=0;
-    config_settings_.i2c_address = 10;
-    config_settings_.programming_mode = 0;
+  if (base_config_settings_.version.major==0 &&
+     base_config_settings_.version.minor==0 &&
+     base_config_settings_.version.micro==0) {
+    // this verison had no serial number field
+    base_config_settings_.serial_number = -1;
+    // upgrade the micro number
+    base_config_settings_.version.micro=1;
     save_config();
   }
-  update_programming_mode_state();
-  Wire.begin(config_settings_.i2c_address);
+  // If we're not at the expected version by the end of the upgrade path,
+  // set everything to default values.
+  if (!(base_config_settings_.version.major==0 &&
+     base_config_settings_.version.minor==0 &&
+     base_config_settings_.version.micro==1) || use_defaults) {
+
+    base_config_settings_.version.major=0;
+    base_config_settings_.version.minor=0;
+    base_config_settings_.version.micro=1;
+    base_config_settings_.i2c_address = 10;
+    base_config_settings_.programming_mode = 0;
+    base_config_settings_.serial_number = -1;
+    save_config();
+  }
+  if (supports_isp()) {
+    update_programming_mode_state();
+  }
+  Wire.begin(base_config_settings_.i2c_address);
 }
 
 void BaseNode::save_config() {
-  eeprom_write_block((void*)&config_settings_,
-                     (void*)EEPROM_CONFIG_SETTINGS, sizeof(config_settings_));
+  eeprom_write_block((void*)&base_config_settings_,
+                     (void*)EEPROM_CONFIG_SETTINGS, sizeof(base_config_settings_));
 }
 
 void BaseNode::set_i2c_address(uint8_t address) {
-  config_settings_.i2c_address = address;
-  Wire.begin(config_settings_.i2c_address);
-  Serial.println(P("i2c_address=") + String(config_settings_.i2c_address,
+  base_config_settings_.i2c_address = address;
+  Wire.begin(base_config_settings_.i2c_address);
+  Serial.println(P("i2c_address=") + String(base_config_settings_.i2c_address,
                  DEC));
   save_config();
 }
