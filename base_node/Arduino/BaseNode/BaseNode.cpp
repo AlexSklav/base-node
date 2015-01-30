@@ -167,6 +167,14 @@ bool BaseNode::process_serial_input() {
       return true;
     }
 
+    if (match_function(P("set_serial_number("))) {
+      int32_t value;
+      if (read_int(value)) {
+        set_serial_number(value);
+      }
+      return true;
+    }
+
     if (supports_isp() && match_function(P("set_programming_mode("))) {
       int32_t value;
       if (read_int(value)) {
@@ -404,6 +412,13 @@ void BaseNode::load_config(bool use_defaults) {
 void BaseNode::save_config() {
   eeprom_write_block((void*)&base_config_settings_,
                      (void*)EEPROM_CONFIG_SETTINGS, sizeof(base_config_settings_));
+}
+
+void BaseNode::set_serial_number(uint32_t serial_number) {
+  base_config_settings_.serial_number = serial_number;
+  Serial.println(P("serial_number=") + String(base_config_settings_.serial_number,
+                 DEC));
+  save_config();
 }
 
 void BaseNode::set_i2c_address(uint8_t address) {

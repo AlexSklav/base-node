@@ -76,6 +76,7 @@ public:
 
   virtual void listen();
   void set_i2c_address(uint8_t address);
+  void set_serial_number(uint32_t serial_number);
   Version base_config_version();
   bool match_function(const char* function_name);
   void set_debug(bool debug) { debug_ = debug; }
