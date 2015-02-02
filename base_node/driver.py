@@ -165,7 +165,15 @@ class BaseNode(object):
         return self.data.pop(0)
 
     def serialize_uint8(self, num):
-        self.write_buffer.append(num)
+        self.serialize(np.array([num], dtype=np.uint8))
+
+    def serialize_uint16(self, num):
+        self.serialize(np.array([num], dtype=np.uint16))
 
     def serialize_float(self, num):
-        self.write_buffer.extend(unpack('BBBB', pack('f', num)))
+        self.serialize(np.array([num], dtype=np.float32))
+
+    def serialize(self, data):
+        for i, byte in enumerate(data.view(np.uint8)):
+            self.write_buffer.append(byte)
+
