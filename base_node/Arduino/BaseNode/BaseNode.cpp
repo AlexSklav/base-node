@@ -215,7 +215,7 @@ void BaseNode::persistent_write(uint16_t address, uint8_t value) {
 void BaseNode::process_wire_command() {
   switch (cmd_) {
   case CMD_GET_PROTOCOL_NAME:
-    if (payload_length_ == 0) {
+    if (payload_length() == 0) {
       serialize(protocol_name(), strlen(protocol_name()));
       return_code_ = RETURN_OK;
     } else {
@@ -223,7 +223,7 @@ void BaseNode::process_wire_command() {
     }
     break;
   case CMD_GET_PROTOCOL_VERSION:
-    if (payload_length_ == 0) {
+    if (payload_length() == 0) {
       serialize(protocol_version(), strlen(protocol_version()));
       return_code_ = RETURN_OK;
     } else {
@@ -231,7 +231,7 @@ void BaseNode::process_wire_command() {
     }
     break;
   case CMD_GET_DEVICE_NAME:
-    if (payload_length_ == 0) {
+    if (payload_length() == 0) {
       serialize(name(), strlen(name()));
       return_code_ = RETURN_OK;
     } else {
@@ -239,7 +239,7 @@ void BaseNode::process_wire_command() {
     }
     break;
   case CMD_GET_MANUFACTURER:
-    if (payload_length_ == 0) {
+    if (payload_length() == 0) {
       serialize(manufacturer(), strlen(manufacturer()));
       return_code_ = RETURN_OK;
     } else {
@@ -247,7 +247,7 @@ void BaseNode::process_wire_command() {
     }
     break;
   case CMD_GET_SOFTWARE_VERSION:
-    if (payload_length_ == 0) {
+    if (payload_length() == 0) {
       serialize(software_version(), strlen(software_version()));
       return_code_ = RETURN_OK;
     } else {
@@ -255,7 +255,7 @@ void BaseNode::process_wire_command() {
     }
     break;
   case CMD_GET_HARDWARE_VERSION:
-    if (payload_length_ == 0) {
+    if (payload_length() == 0) {
       serialize(hardware_version(), strlen(hardware_version()));
       return_code_ = RETURN_OK;
     } else {
@@ -263,7 +263,7 @@ void BaseNode::process_wire_command() {
     }
     break;
   case CMD_GET_URL:
-    if (payload_length_ == 0) {
+    if (payload_length() == 0) {
       serialize(url(), strlen(url()));
       return_code_ = RETURN_OK;
     } else {
@@ -272,7 +272,7 @@ void BaseNode::process_wire_command() {
     break;
   case CMD_SET_PROGRAMMING_MODE:
     if (supports_isp()) {
-      if (payload_length_ == 1) {
+      if (payload_length() == 1) {
         set_programming_mode(read<uint8_t>() > 0);
         return_code_ = RETURN_OK;
       } else {
@@ -283,17 +283,17 @@ void BaseNode::process_wire_command() {
     } 
     break;
   case CMD_PERSISTENT_READ:
-    if (payload_length_ == 2) {
+    if (payload_length() == 2) {
       uint16_t address = read<uint16_t>();
       uint8_t value = persistent_read(address);
-      serialize(&value,sizeof(value));
+      serialize(&value, sizeof(value));
       return_code_ = RETURN_OK;
     } else {
       return_code_ = RETURN_BAD_PACKET_SIZE;
     }
     break;
   case CMD_PERSISTENT_WRITE:
-    if (payload_length_ == 3) {
+    if (payload_length() == 3) {
       uint16_t address = read<uint16_t>();
       uint8_t value = read<uint8_t>();
       persistent_write(address, value);
@@ -303,10 +303,66 @@ void BaseNode::process_wire_command() {
     }
     break;
   case CMD_LOAD_CONFIG:
-    if (payload_length_ == 1) {
+    if (payload_length() == 1) {
       return_code_ = RETURN_OK;
       bool use_defaults = read<uint8_t>() > 0;
       load_config(use_defaults);
+    } else {
+      return_code_ = RETURN_BAD_PACKET_SIZE;
+    }
+    break;
+  case CMD_SET_PIN_MODE:
+    if (payload_length() == 2) {
+      uint8_t pin = read<uint8_t>();
+      uint8_t mode = read<uint8_t>();
+      Serial.println("pinMode(" + String(pin) + ", " + String(mode) + ")");
+      pinMode(pin, mode);
+      return_code_ = RETURN_OK;
+    } else {
+      return_code_ = RETURN_BAD_PACKET_SIZE;
+    }
+    break;
+  case CMD_DIGITAL_WRITE:
+    if (payload_length() == 2) {
+      uint8_t pin = read<uint8_t>();
+      uint8_t value = read<uint8_t>();
+      Serial.println("digitalWrite(" + String(pin) + ", " + String(value) + \
+        ")");
+      digitalWrite(pin, value);
+      return_code_ = RETURN_OK;
+    } else {
+      return_code_ = RETURN_BAD_PACKET_SIZE;
+    }
+    break;
+  case CMD_DIGITAL_READ:
+    if (payload_length() == 1) {
+      uint8_t pin = read<uint8_t>();
+      uint8_t value = digitalRead(pin);
+      Serial.println("digitalRead(" + String(pin) + ") = " + String(value));
+      serialize(&value, sizeof(value));
+      return_code_ = RETURN_OK;
+    } else {
+      return_code_ = RETURN_BAD_PACKET_SIZE;
+    }
+    break;
+  case CMD_ANALOG_WRITE:
+    if (payload_length() == 2) {
+      uint8_t pin =  read<uint8_t>();
+      uint16_t value = read<uint16_t>();
+      Serial.println("analogWrite(" + String(pin) + ", " + String(value) + ")");
+      analogWrite(pin, value);
+      return_code_ = RETURN_OK;
+    } else {
+      return_code_ = RETURN_BAD_PACKET_SIZE;
+    }
+    break;
+  case CMD_ANALOG_READ:
+    if (payload_length() == 1) {
+      uint8_t pin = read<uint8_t>();
+      uint16_t value = analogRead(pin);
+      Serial.println("analogRead(" + String(pin) + ") = " + String(value));
+      serialize(&value, sizeof(value));
+      return_code_ = RETURN_OK;
     } else {
       return_code_ = RETURN_BAD_PACKET_SIZE;
     }
@@ -389,23 +445,65 @@ void BaseNode::load_config(bool use_defaults) {
     base_config_settings_.version.micro=1;
     save_config();
   }
+
+  if (base_config_settings_.version.major==0 &&
+     base_config_settings_.version.minor==0 &&
+     base_config_settings_.version.micro==1) {
+    // this version had no pin_state or pin_mode fields
+	memset(base_config_settings_.pin_mode, 0, 9);
+	memset(base_config_settings_.pin_state, 0, 9);
+    // upgrade the micro number
+    base_config_settings_.version.micro=2;
+    save_config();
+  }
+
   // If we're not at the expected version by the end of the upgrade path,
   // set everything to default values.
   if (!(base_config_settings_.version.major==0 &&
      base_config_settings_.version.minor==0 &&
-     base_config_settings_.version.micro==1) || use_defaults) {
-
+     base_config_settings_.version.micro==2) || use_defaults) {
     base_config_settings_.version.major=0;
     base_config_settings_.version.minor=0;
     base_config_settings_.version.micro=1;
     base_config_settings_.i2c_address = 10;
     base_config_settings_.programming_mode = 0;
     base_config_settings_.serial_number = -1;
+    memset(base_config_settings_.pin_mode, 0, 9);
+    memset(base_config_settings_.pin_state, 0, 9);
     save_config();
   }
+
+  // Initialize pin mode and state of digital pins from persistent storage
+  // _(i.e., EEPROM on AVR)_.
+  for (uint8_t i = 0; i < ceil(float(NUM_DIGITAL_PINS) / 8.0); i++) {
+    for (uint8_t j = 0; j < 8; j++) {
+      if (i * 8 + j < NUM_DIGITAL_PINS) {
+    	uint8_t mode = (base_config_settings_.pin_mode[i] >> j) & 0x01;
+    	uint8_t state = (base_config_settings_.pin_state[i] >> j) & 0x01;
+
+    	/*
+    	Serial.print("pin " + String(i * 8 + j) + " (");
+        if (mode==0) {
+          if (state) {
+            Serial.println("INPUT_PULLUP)");
+          } else {
+            Serial.println("INPUT)");
+          }
+    	} else {
+          Serial.println("OUTPUT): " + String(state));
+    	}
+        */
+
+        pinMode(i * 8 + j, mode);
+        digitalWrite(i * 8 + j, state);
+      }
+    }
+  }
+
   if (supports_isp()) {
     update_programming_mode_state();
   }
+
   Wire.begin(base_config_settings_.i2c_address);
 }
 

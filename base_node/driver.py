@@ -4,6 +4,21 @@ import numpy as np
 
 PERSISTENT_SERIAL_NUMBER_ADDRESS = 8
 
+INPUT = 0
+OUTPUT = 1
+INPUT_PULLUP = 2
+LOW = 0
+HIGH = 1
+
+A0 = 14
+A1 = 15
+A2 = 16
+A3 = 17
+A4 = 18
+A5 = 19
+A6 = 20
+A7 = 21
+
 # command codes
 CMD_GET_PROTOCOL_NAME       = 0x80
 CMD_GET_PROTOCOL_VERSION    = 0x81
@@ -13,14 +28,24 @@ CMD_GET_HARDWARE_VERSION    = 0x84
 CMD_GET_SOFTWARE_VERSION    = 0x85
 CMD_GET_URL                 = 0x86
 
-# avoid command codes 0x88-8F to prevent conflicts with
+# avoid command codes 0x88-0x8F to prevent conflicts with
 # boards emulating PCA9505 GPIO chips (e.g., 
 # http://microfluidics.utoronto.ca/git/firmware___hv_switching_board.git)
 
 CMD_PERSISTENT_READ         = 0x90
 CMD_PERSISTENT_WRITE        = 0x91
 CMD_LOAD_CONFIG             = 0x92
-CMD_SET_PROGRAMMING_MODE    = 0x9F
+CMD_SET_PIN_MODE            = 0x93
+CMD_DIGITAL_READ            = 0x94
+CMD_DIGITAL_WRITE           = 0x95
+CMD_ANALOG_READ             = 0x96
+CMD_ANALOG_WRITE            = 0x97
+
+# avoid command codes 0x98-0x9F to prevent conflicts with
+# boards emulating PCA9505 GPIO chips (e.g., 
+# http://microfluidics.utoronto.ca/git/firmware___hv_switching_board.git)
+
+CMD_SET_PROGRAMMING_MODE    = 0xA0
 
 # reserved return codes
 RETURN_OK                   = 0x00
@@ -61,11 +86,35 @@ class BaseNode(object):
 
     def url(self):
         return self._get_string(CMD_GET_URL)
+    
+    def pin_mode(self, pin, mode):
+        self.serialize_uint8(pin)
+        self.serialize_uint8(mode)
+        self.send_command(CMD_SET_PIN_MODE)
+
+    def digital_read(self, pin):
+        self.serialize_uint8(pin)
+        self.send_command(CMD_DIGITAL_READ)
+        return self.read_uint8()
+
+    def digital_write(self, pin, state):
+        self.serialize_uint8(pin)
+        self.serialize_uint8(state)
+        self.send_command(CMD_DIGITAL_WRITE)
+
+    def analog_read(self, pin):
+        self.serialize_uint8(pin)
+        self.send_command(CMD_ANALOG_READ)
+        return self.read_uint16()
+
+    def analog_write(self, pin, value):
+        self.serialize_uint8(pin)
+        self.serialize_uint16(value)
+        self.send_command(CMD_ANALOG_WRITE)
 
     def persistent_read(self, address):
         # pack the address into a 16 bits
-        data = unpack('BB', pack('H', address))
-        self.write_buffer.extend(data)
+        self.serialize_uint16(address)
         self.send_command(CMD_PERSISTENT_READ)
         return self.read_uint8()
 
@@ -146,10 +195,8 @@ class BaseNode(object):
         self.send_command(cmd)
         return pack('B' * len(self.data), *self.data)
 
-    def read_float(self):
-        num = self.data[0:4]
-        self.data = self.data[4:]
-        return unpack('f', pack('BBBB', *num))[0]
+    def read_uint8(self):
+        return self.data.pop(0)
 
     def read_uint16(self):
         num = self.data[0:2]
@@ -161,8 +208,10 @@ class BaseNode(object):
         self.data = self.data[4:]
         return unpack('I', pack('BBBB', *num))[0]
 
-    def read_uint8(self):
-        return self.data.pop(0)
+    def read_float(self):
+        num = self.data[0:4]
+        self.data = self.data[4:]
+        return unpack('f', pack('BBBB', *num))[0]
 
     def serialize_uint8(self, num):
         self.serialize(np.array([num], dtype=np.uint8))
@@ -170,10 +219,12 @@ class BaseNode(object):
     def serialize_uint16(self, num):
         self.serialize(np.array([num], dtype=np.uint16))
 
+    def serialize_uint32(self, num):
+        self.serialize(np.array([num], dtype=np.uint32))
+
     def serialize_float(self, num):
         self.serialize(np.array([num], dtype=np.float32))
 
     def serialize(self, data):
-        for i, byte in enumerate(data.view(np.uint8)):
+        for byte in data.view(np.uint8):
             self.write_buffer.append(byte)
-

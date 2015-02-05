@@ -23,10 +23,15 @@ public:
       uint8_t i2c_address;
       uint8_t programming_mode;
       uint32_t serial_number;
+      uint8_t pin_mode[9];
+      uint8_t pin_state[9];
   };
 
   // Persistent storage _(e.g., EEPROM)_ addresses.
-  static const uint16_t PERSISTENT_SERIAL_NUMBER_ADDRESS = 8;
+  static const uint16_t EEPROM_CONFIG_SETTINGS =      	    0;
+  static const uint16_t PERSISTENT_SERIAL_NUMBER_ADDRESS =  8;
+  static const uint16_t PERSISTENT_PIN_MODE_ADDRESS =      12;
+  static const uint16_t PERSISTENT_PIN_STATE_ADDRESS =     21;
 
   // reserved commands
   static const uint8_t CMD_GET_PROTOCOL_NAME =        0x80;
@@ -36,11 +41,17 @@ public:
   static const uint8_t CMD_GET_HARDWARE_VERSION =     0x84;
   static const uint8_t CMD_GET_SOFTWARE_VERSION =     0x85;
   static const uint8_t CMD_GET_URL =                  0x86;
+
   static const uint8_t CMD_PERSISTENT_READ =          0x90;
   static const uint8_t CMD_PERSISTENT_WRITE =         0x91;
   static const uint8_t CMD_LOAD_CONFIG =              0x92;
-  static const uint8_t CMD_SET_PROGRAMMING_MODE =     0x9F;
+  static const uint8_t CMD_SET_PIN_MODE =             0x93;
+  static const uint8_t CMD_DIGITAL_READ =             0x94;
+  static const uint8_t CMD_DIGITAL_WRITE =            0x95;
+  static const uint8_t CMD_ANALOG_READ =              0x96;
+  static const uint8_t CMD_ANALOG_WRITE =             0x97;
 
+  static const uint8_t CMD_SET_PROGRAMMING_MODE =     0x9C;
 
   // reserved return codes
   static const uint8_t RETURN_OK =                    0x00;
@@ -56,8 +67,6 @@ public:
 
   static const uint16_t MAX_PAYLOAD_LENGTH = 100;
   static const uint32_t BAUD_RATE = 115200;
-
-  static const uint16_t EEPROM_CONFIG_SETTINGS = 0;
 
   static void handle_wire_receive(int n_bytes);
   static void handle_wire_request();
@@ -85,6 +94,7 @@ public:
    * support the `EEPROM` library used by the AVR chips. */
   virtual uint8_t persistent_read(uint16_t address);
   virtual void persistent_write(uint16_t address, uint8_t value);
+  static uint16_t payload_length() { return payload_length_; }
 
   static bool send_payload_length_;
   static uint8_t cmd_;
