@@ -8,3 +8,7 @@ dist/
 paver-minilib.zip
 .project
 .pydevproject
+*.o
+*.pyc
+.sconsign.dblite
+build/

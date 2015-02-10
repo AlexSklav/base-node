@@ -39,6 +39,10 @@ def install_as_arduino_library():
     except IOError, error:
         print str(error)
 
+@task
+@cmdopts([('sconsflags=', 'f', 'Flags to pass to SCons.')])
+def build_firmware():
+    sh('scons %s' % getattr(options, 'sconsflags', ''))
 
 @task
 @needs('generate_setup', 'minilib', 'setuptools.command.sdist')

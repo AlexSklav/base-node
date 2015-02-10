@@ -1,21 +1,25 @@
 import os
 import glob
 
-from .driver import BaseNode
+from path_helpers import path
+
+from .driver import BaseNode, HIGH, LOW, INPUT, OUTPUT, INPUT_PULLUP
+
+
+def package_path():
+    return path(__file__).parent
 
 
 def get_sketch_directory():
     '''
-    Return directory containing the `base_node` Arduino sketch.
+    Return directory containing the `basic` Arduino sketch.
     '''
-    import base_node
-    return os.path.join(os.path.abspath(os.path.dirname(base_node.__file__)),
-                        'Arduino', 'BaseNode')
+    return package_path().joinpath('Arduino', 'BaseNode', 'examples', 'basic')
 
 
 def get_includes():
     '''
-    Return directories containing the `base_node` Arduino header files.
+    Return directories containing the `BaseNode.h` Arduino header file.
 
     Modules that need to compile against `base_node` should use this function
     to locate the appropriate include directories.
@@ -31,7 +35,7 @@ def get_includes():
         ...
 
     '''
-    return [get_sketch_directory()]
+    return package_path().joinpath('Arduino', 'BaseNode')
 
 
 def get_sources():
@@ -52,7 +56,19 @@ def get_sources():
         ...
 
     '''
-    return glob.glob(os.path.join(get_sketch_directory(), '*.c*'))
+    return glob.glob(get_sketch_directory().joinpath('*.c*'))
+
+def get_firmwares():
+
+    '''
+    Return compiled Arduino hex file paths.
+
+    This function may be used to locate firmware binaries that are available
+    for flashing to [Arduino][1] boards.
+
+    [1]: http://arduino.cc
+    '''
+    return {'uno': package_path().joinpath('firmware', 'basic.hex')}
 
 
 def install_as_arduino_library(sketchbook_home, overwrite=False):

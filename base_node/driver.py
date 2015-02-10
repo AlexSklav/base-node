@@ -97,9 +97,9 @@ class BaseNode(object):
         self.send_command(CMD_DIGITAL_READ)
         return self.read_uint8()
 
-    def digital_write(self, pin, state):
+    def digital_write(self, pin, value):
         self.serialize_uint8(pin)
-        self.serialize_uint8(state)
+        self.serialize_uint8(value)
         self.send_command(CMD_DIGITAL_WRITE)
 
     def analog_read(self, pin):
