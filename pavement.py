@@ -13,15 +13,15 @@ import base_node
 
 # Setup script for path
 
-setup(name='wheeler.base_node',
+setup(name='wheeler.base-node',
       version=version.getVersion(),
       description='Common base class/API for embedded hardware devices.',
       author='Ryan Fobel',
       author_email='ryan@fobel.net',
       url='http://microfluidics.utoronto.ca/git/firmware___base_node.git',
       license='GPLv2',
-      packages=['base_node'],
-      package_data={'base_node': ['Arduino/BaseNode/*.*']})
+      packages=['base_node']
+)
 
 
 @task
