@@ -450,8 +450,8 @@ void BaseNode::load_config(bool use_defaults) {
      base_config_settings_.version.minor==0 &&
      base_config_settings_.version.micro==1) {
     // this version had no pin_state or pin_mode fields
-	memset(base_config_settings_.pin_mode, 0, 9);
-	memset(base_config_settings_.pin_state, 0, 9);
+    memset(base_config_settings_.pin_mode, 0, 9);
+    memset(base_config_settings_.pin_state, 0, 9);
     // upgrade the micro number
     base_config_settings_.version.micro=2;
     save_config();
@@ -464,7 +464,7 @@ void BaseNode::load_config(bool use_defaults) {
      base_config_settings_.version.micro==2) || use_defaults) {
     base_config_settings_.version.major=0;
     base_config_settings_.version.minor=0;
-    base_config_settings_.version.micro=1;
+    base_config_settings_.version.micro=2;
     base_config_settings_.i2c_address = 10;
     base_config_settings_.programming_mode = 0;
     base_config_settings_.serial_number = -1;
@@ -509,7 +509,8 @@ void BaseNode::load_config(bool use_defaults) {
 
 void BaseNode::save_config() {
   eeprom_write_block((void*)&base_config_settings_,
-                     (void*)EEPROM_CONFIG_SETTINGS, sizeof(base_config_settings_));
+                     (void*)EEPROM_CONFIG_SETTINGS,
+                     sizeof(base_config_settings_));
 }
 
 void BaseNode::set_serial_number(uint32_t serial_number) {
