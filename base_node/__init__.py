@@ -56,7 +56,11 @@ def get_sources():
         ...
 
     '''
-    return glob.glob(get_sketch_directory().joinpath('*.c*'))
+    sources = get_sketch_directory().files('*.c*')
+    for p in get_includes():
+        sources = path(p).files('*.c*')
+    return sources
+
 
 def get_firmwares():
 
