@@ -35,7 +35,7 @@ def get_includes():
         ...
 
     '''
-    return package_path().joinpath('Arduino', 'BaseNode')
+    return [package_path().joinpath('Arduino', 'BaseNode')]
 
 
 def get_sources():
