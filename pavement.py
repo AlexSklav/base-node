@@ -20,7 +20,8 @@ setup(name='wheeler.base-node',
       author_email='ryan@fobel.net',
       url='http://microfluidics.utoronto.ca/git/firmware___base_node.git',
       license='GPLv2',
-      packages=['base_node']
+      packages=['base_node'],
+      include_package_data=True,
 )
 
 
