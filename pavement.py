@@ -1,7 +1,7 @@
 import os
 import sys
 
-from paver.easy import task, needs, options, cmdopts, path
+from paver.easy import task, needs, options, cmdopts, path, sh
 from paver.setuputils import setup
 
 # add the current directory as the first listing on the python path
@@ -45,7 +45,7 @@ def build_firmware():
     sh('scons %s' % getattr(options, 'sconsflags', ''))
 
 @task
-@needs('generate_setup', 'minilib', 'setuptools.command.sdist')
+@needs('generate_setup', 'minilib', 'setuptools.command.sdist', 'build_firmware')
 def sdist():
     """Overrides sdist to make sure that our setup.py is generated."""
     pass
