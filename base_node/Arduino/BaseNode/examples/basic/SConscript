@@ -2,7 +2,7 @@
 # scons script for the Arduino sketch
 import re
 
-from arduino_build import ArduinoBuildContext
+from arduino_scons.arduino_build import ArduinoBuildContext
 import base_node 
 
 
