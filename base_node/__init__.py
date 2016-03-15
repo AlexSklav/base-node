@@ -1,12 +1,9 @@
-import os
-import glob
-
-from path_helpers import path
-
 from .driver import BaseNode, HIGH, LOW, INPUT, OUTPUT, INPUT_PULLUP
 
 
 def package_path():
+    from path_helpers import path
+
     return path(__file__).parent
 
 
@@ -56,6 +53,8 @@ def get_sources():
         ...
 
     '''
+    from path_helpers import path
+
     sources = get_sketch_directory().files('*.c*')
     for p in get_includes():
         sources = path(p).files('*.c*')
