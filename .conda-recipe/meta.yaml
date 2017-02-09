@@ -1,0 +1,42 @@
+# source will be downloaded prior to filling in jinja templates
+# Example assumes that this folder has setup.py in it
+source:
+  git_url: ../
+
+package:
+  name: base-node
+{% if GIT_DESCRIBE_NUMBER > '0' %}
+  version: {{ GIT_DESCRIBE_TAG[1:] }}.post{{ GIT_DESCRIBE_NUMBER }}
+{% else %}
+  version: {{ GIT_DESCRIBE_TAG[1:] }}.0
+{% endif %}
+
+requirements:
+  build:
+    - paver
+    - pip
+    - platformio-framework-arduinoavr
+    - platformio-framework-arduinoteensy
+    - platformio-helpers
+    - platformio-platform-atmelavr
+    - platformio-tool-avrdude
+    - platformio-tool-scons
+    - platformio-tool-teensy
+    - platformio-toolchain-atmelavr
+    - platformio-toolchain-gccarmnoneeabi
+    - python 2.7*
+    - path_helpers
+    - numpy
+
+  run:
+    - platformio-helpers
+    - platformio-tool-scons
+    - platformio-tool-avrdude
+    - platformio-tool-teensy
+    - python 2.7*
+    - path_helpers
+    - numpy
+
+about:
+  home: https://github.com/wheeler-microfluidics/base-node
+  license: BSD
