@@ -22,7 +22,7 @@ public:
       Version version;
       uint8_t i2c_address;
       uint8_t programming_mode;
-      uint32_t serial_number;
+      uint8_t uuid[16];
       uint8_t pin_mode[9];
       uint8_t pin_state[9];
   };
@@ -85,7 +85,7 @@ public:
 
   virtual void listen();
   void set_i2c_address(uint8_t address);
-  void set_serial_number(uint32_t serial_number);
+  void set_uuid(uint8_t uuid[16]);
   Version base_config_version();
   bool match_function(const char* function_name);
   void set_debug(bool debug) { debug_ = debug; }
@@ -125,6 +125,7 @@ protected:
   }
 
   String version_string(Version version);
+  void print_uuid();
   bool read_value(char* &str, char* &end);
   bool read_int(int32_t &value);
   bool read_float(float &value);
