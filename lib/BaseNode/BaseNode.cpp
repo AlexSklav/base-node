@@ -117,8 +117,7 @@ void BaseNode::dump_config() {
                    String(base_config_settings_.i2c_address, DEC));
     Serial.println(P("programming_mode=") +
                    String(base_config_settings_.programming_mode, DEC));
-    Serial.println(P("serial_number=") +
-                   String(base_config_settings_.serial_number, DEC));
+    print_uuid();
     if (supports_isp()) {
       Serial.println(P("supports_ISP=true"));
     } else {
@@ -167,11 +166,17 @@ bool BaseNode::process_serial_input() {
       return true;
     }
 
-    if (match_function(P("set_serial_number("))) {
-      int32_t value;
-      if (read_int(value)) {
-        set_serial_number(value);
+    if (match_function(P("set_uuid("))) {
+      int32_t b;
+      uint8_t uuid[16];
+      for (uint8_t i = 0; i < 16; i++) {
+        if (read_int(b)) {
+          uuid[i] = b;
+	} else {
+	  return false;
+	}
       }
+      set_uuid(uuid);
       return true;
     }
 
@@ -383,7 +388,7 @@ bool BaseNode::read_int(int32_t &value) {
     char val_str[end - str + 1];
     memcpy(val_str, str, end - str);
     val_str[end - str] = 0;
-    value = atoi(val_str);
+    value = atol(val_str);
     return true;
   }
   return false;
@@ -436,38 +441,17 @@ void BaseNode::load_config(bool use_defaults) {
   eeprom_read_block((void*)&base_config_settings_,
                     (void*)EEPROM_CONFIG_SETTINGS, sizeof(base_config_settings_));
 
-  if (base_config_settings_.version.major==0 &&
-     base_config_settings_.version.minor==0 &&
-     base_config_settings_.version.micro==0) {
-    // this verison had no serial number field
-    base_config_settings_.serial_number = -1;
-    // upgrade the micro number
-    base_config_settings_.version.micro=1;
-    save_config();
-  }
-
-  if (base_config_settings_.version.major==0 &&
-     base_config_settings_.version.minor==0 &&
-     base_config_settings_.version.micro==1) {
-    // this version had no pin_state or pin_mode fields
-    memset(base_config_settings_.pin_mode, 0, 9);
-    memset(base_config_settings_.pin_state, 0, 9);
-    // upgrade the micro number
-    base_config_settings_.version.micro=2;
-    save_config();
-  }
-
   // If we're not at the expected version by the end of the upgrade path,
   // set everything to default values.
   if (!(base_config_settings_.version.major==0 &&
      base_config_settings_.version.minor==0 &&
-     base_config_settings_.version.micro==2) || use_defaults) {
+     base_config_settings_.version.micro==3) || use_defaults) {
     base_config_settings_.version.major=0;
     base_config_settings_.version.minor=0;
-    base_config_settings_.version.micro=2;
+    base_config_settings_.version.micro=3;
     base_config_settings_.i2c_address = 10;
     base_config_settings_.programming_mode = 0;
-    base_config_settings_.serial_number = -1;
+    memset(base_config_settings_.uuid, 0, 16);
     memset(base_config_settings_.pin_mode, 0, 9);
     memset(base_config_settings_.pin_state, 0, 9);
     save_config();
@@ -513,11 +497,21 @@ void BaseNode::save_config() {
                      sizeof(base_config_settings_));
 }
 
-void BaseNode::set_serial_number(uint32_t serial_number) {
-  base_config_settings_.serial_number = serial_number;
-  Serial.println(P("serial_number=") + String(base_config_settings_.serial_number,
-                 DEC));
+void BaseNode::set_uuid(uint8_t uuid[16]) {
+  memcpy(base_config_settings_.uuid, uuid, 16);
+  print_uuid();
   save_config();
+}
+
+void BaseNode::print_uuid() {
+  Serial.print(P("uuid="));
+  for (uint8_t i = 0; i < 16; i++) {
+    Serial.print(base_config_settings_.uuid[i]);
+    if (i < 15) {
+      Serial.print("-");
+    }
+  }
+  Serial.println();
 }
 
 void BaseNode::set_i2c_address(uint8_t address) {
