@@ -1,8 +1,9 @@
 from struct import pack, unpack
+import uuid
 
 import numpy as np
 
-PERSISTENT_SERIAL_NUMBER_ADDRESS = 8
+PERSISTENT_UUID_ADDRESS = 8
 
 INPUT = 0
 OUTPUT = 1
@@ -166,16 +167,9 @@ class BaseNode(object):
             self.load_config(False)
 
     @property
-    def serial_number(self):
-        return self.persistent_read_multibyte(
-            PERSISTENT_SERIAL_NUMBER_ADDRESS, dtype=np.uint32)
-
-    @serial_number.setter
-    def serial_number(self, value):
-        self.persistent_write_multibyte(PERSISTENT_SERIAL_NUMBER_ADDRESS,
-                                        np.array([value], dtype=np.uint32),
-                                        True)
-        self.__serial_number = value
+    def uuid(self):
+        return uuid.UUID(bytes=self.persistent_read_multibyte(
+		         PERSISTENT_UUID_ADDRESS, 16).tobytes())
 
     def load_config(self, use_defaults=False):
         self.write_buffer.append((0,1)[use_defaults])

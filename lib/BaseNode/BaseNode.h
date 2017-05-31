@@ -29,9 +29,9 @@ public:
 
   // Persistent storage _(e.g., EEPROM)_ addresses.
   static const uint16_t EEPROM_CONFIG_SETTINGS =      	    0;
-  static const uint16_t PERSISTENT_SERIAL_NUMBER_ADDRESS =  8;
-  static const uint16_t PERSISTENT_PIN_MODE_ADDRESS =      12;
-  static const uint16_t PERSISTENT_PIN_STATE_ADDRESS =     21;
+  static const uint16_t PERSISTENT_UUID_ADDRESS =           8;
+  static const uint16_t PERSISTENT_PIN_MODE_ADDRESS =      24;
+  static const uint16_t PERSISTENT_PIN_STATE_ADDRESS =     33;
 
   // reserved commands
   static const uint8_t CMD_GET_PROTOCOL_NAME =        0x80;
