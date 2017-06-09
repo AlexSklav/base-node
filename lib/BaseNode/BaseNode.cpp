@@ -170,7 +170,7 @@ bool BaseNode::process_serial_input() {
       int32_t b;
       uint8_t uuid[16];
       for (uint8_t i = 0; i < 16; i++) {
-        if (read_int(b)) {
+        if (read_hex(b)) {
           uuid[i] = b;
 	} else {
 	  return false;
@@ -394,6 +394,19 @@ bool BaseNode::read_int(int32_t &value) {
   return false;
 }
 
+bool BaseNode::read_hex(int32_t &value) {
+  char* str;
+  char* end;
+  if (read_value(str, end)) {
+    char val_str[end - str + 1];
+    memcpy(val_str, str, end - str);
+    val_str[end - str] = 0;
+    value = strtol(val_str, NULL, 16);
+    return true;
+  }
+  return false;
+}
+
 bool BaseNode::read_float(float &value) {
   char* str;
   char* end;
@@ -506,7 +519,7 @@ void BaseNode::set_uuid(uint8_t uuid[16]) {
 void BaseNode::print_uuid() {
   Serial.print(P("uuid="));
   for (uint8_t i = 0; i < 16; i++) {
-    Serial.print(base_config_settings_.uuid[i]);
+    Serial.print(base_config_settings_.uuid[i], HEX);
     if (i < 15) {
       Serial.print("-");
     }

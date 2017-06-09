@@ -128,6 +128,7 @@ protected:
   void print_uuid();
   bool read_value(char* &str, char* &end);
   bool read_int(int32_t &value);
+  bool read_hex(int32_t &value);
   bool read_float(float &value);
   bool read_serial_command();
   void error(uint8_t code);
