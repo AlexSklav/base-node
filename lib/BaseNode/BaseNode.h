@@ -66,13 +66,13 @@ public:
   static const uint8_t RETURN_MAX_PAYLOAD_EXCEEDED =  0x09;
 
   static const uint16_t MAX_PAYLOAD_LENGTH = 100;
-  static const uint32_t BAUD_RATE = 115200;
+  static const uint32_t DEFAULT_BAUD_RATE = 115200;
 
   static void handle_wire_receive(int n_bytes);
   static void handle_wire_request();
 
   BaseNode() { debug_ = false; }
-  virtual void begin();
+  virtual void begin(uint32_t baudrate=DEFAULT_BAUD_RATE);
   // local accessors
   const char* prog_string(const char* str) { strcpy_P(buffer_, str); return buffer_; }
   const char* name() { return prog_string(NAME_); }

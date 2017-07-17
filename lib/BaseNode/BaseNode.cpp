@@ -42,14 +42,14 @@ void BaseNode::handle_wire_request() {
 }
 
 /* Initialize the communications for the extension module. */
-void BaseNode::begin() {
+void BaseNode::begin(uint32_t baudrate) {
     if (supports_isp()) {
       // The reset latch is used for programming over the communictions bus.
       // Pull it low to enter programming mode.
       digitalWrite(RESET_LATCH, HIGH);
       pinMode(RESET_LATCH, OUTPUT);
     }
-    Serial.begin(115200);
+    Serial.begin(baudrate);
     load_config();
     dump_config();
     Wire.onRequest(handle_wire_request);
@@ -280,7 +280,7 @@ void BaseNode::process_wire_command() {
       }
     } else {
       return_code_ = RETURN_GENERAL_ERROR;
-    } 
+    }
     break;
   case CMD_PERSISTENT_READ:
     if (payload_length() == 2) {
