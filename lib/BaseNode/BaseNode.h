@@ -22,16 +22,16 @@ public:
       Version version;
       uint8_t i2c_address;
       uint8_t programming_mode;
-      uint32_t serial_number;
+      uint8_t uuid[16];
       uint8_t pin_mode[9];
       uint8_t pin_state[9];
   };
 
   // Persistent storage _(e.g., EEPROM)_ addresses.
   static const uint16_t EEPROM_CONFIG_SETTINGS =      	    0;
-  static const uint16_t PERSISTENT_SERIAL_NUMBER_ADDRESS =  8;
-  static const uint16_t PERSISTENT_PIN_MODE_ADDRESS =      12;
-  static const uint16_t PERSISTENT_PIN_STATE_ADDRESS =     21;
+  static const uint16_t PERSISTENT_UUID_ADDRESS =           8;
+  static const uint16_t PERSISTENT_PIN_MODE_ADDRESS =      24;
+  static const uint16_t PERSISTENT_PIN_STATE_ADDRESS =     33;
 
   // reserved commands
   static const uint8_t CMD_GET_PROTOCOL_NAME =        0x80;
@@ -85,7 +85,7 @@ public:
 
   virtual void listen();
   void set_i2c_address(uint8_t address);
-  void set_serial_number(uint32_t serial_number);
+  void set_uuid(uint8_t uuid[16]);
   Version base_config_version();
   bool match_function(const char* function_name);
   void set_debug(bool debug) { debug_ = debug; }
@@ -125,6 +125,7 @@ protected:
   }
 
   String version_string(Version version);
+  void print_uuid();
   bool read_value(char* &str, char* &end);
   bool read_int(int32_t &value);
   bool read_float(float &value);
