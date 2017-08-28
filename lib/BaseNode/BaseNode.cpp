@@ -1,10 +1,10 @@
 #include "Arduino.h"
 #include <avr/eeprom.h>
 #include <math.h>
-#include <Wire.h>
 #include <EEPROM.h>
 
 #include "BaseNode.h"
+#include "WireTimeout.h"
 
 #define P(str) (strcpy_P(p_buffer_, PSTR(str)), p_buffer_)
 
@@ -501,7 +501,7 @@ void BaseNode::load_config(bool use_defaults) {
     update_programming_mode_state();
   }
 
-  Wire.begin(base_config_settings_.i2c_address);
+  Wire.begin_timeout(base_config_settings_.i2c_address, 100);
 }
 
 void BaseNode::save_config() {
@@ -529,7 +529,7 @@ void BaseNode::print_uuid() {
 
 void BaseNode::set_i2c_address(uint8_t address) {
   base_config_settings_.i2c_address = address;
-  Wire.begin(base_config_settings_.i2c_address);
+  Wire.begin_timeout(base_config_settings_.i2c_address, 100);
   Serial.println(P("i2c_address=") + String(base_config_settings_.i2c_address,
                  DEC));
   save_config();
