@@ -30,7 +30,7 @@ CMD_GET_SOFTWARE_VERSION    = 0x85
 CMD_GET_URL                 = 0x86
 
 # avoid command codes 0x88-0x8F to prevent conflicts with
-# boards emulating PCA9505 GPIO chips (e.g., 
+# boards emulating PCA9505 GPIO chips (e.g.,
 # http://microfluidics.utoronto.ca/git/firmware___hv_switching_board.git)
 
 CMD_PERSISTENT_READ         = 0x90
@@ -43,7 +43,7 @@ CMD_ANALOG_READ             = 0x96
 CMD_ANALOG_WRITE            = 0x97
 
 # avoid command codes 0x98-0x9F to prevent conflicts with
-# boards emulating PCA9505 GPIO chips (e.g., 
+# boards emulating PCA9505 GPIO chips (e.g.,
 # http://microfluidics.utoronto.ca/git/firmware___hv_switching_board.git)
 
 CMD_SET_PROGRAMMING_MODE    = 0xA0
@@ -59,6 +59,17 @@ RETURN_BAD_PACKET_SIZE      = 0x06
 RETURN_BAD_CRC              = 0x07
 RETURN_BAD_VALUE            = 0x08
 RETURN_MAX_PAYLOAD_EXCEEDED = 0x09
+
+# numpy data type corresponding to version 0.3.0 HV switching board
+# configuration
+CONFIG_DTYPE = np.dtype([('version', [('major', 'uint16'),
+                                      ('minor', 'uint16'),
+                                      ('micro', 'uint16')]),
+                         ('i2c_address', 'uint8'),
+                         ('programming_mode', 'uint8'),
+                         ('uuid', 'S16'),
+                         ('pin_mode', 'S9'),
+                         ('pin_state', 'S9')])
 
 
 class BaseNode(object):
@@ -87,7 +98,7 @@ class BaseNode(object):
 
     def url(self):
         return self._get_string(CMD_GET_URL)
-    
+
     def pin_mode(self, pin, mode):
         self.serialize_uint8(pin)
         self.serialize_uint8(mode)
@@ -122,10 +133,10 @@ class BaseNode(object):
     def persistent_write(self, address, byte, refresh_config=False):
         '''
         Write a single byte to an address in persistent memory.
-        
+
         If refresh_config is True, load_config() is called afterward to
         refresh the configuration settings.
-        '''        
+        '''
         # pack the address into a 16 bits
         data = list(unpack('BB', pack('H', address)))
         data.append(byte)
@@ -157,10 +168,10 @@ class BaseNode(object):
     def persistent_write_multibyte(self, address, data, refresh_config=False):
         '''
         Write multiple bytes to an address in persistent memory.
-        
+
         If refresh_config is True, load_config() is called afterward to
         refresh the configuration settings.
-        '''        
+        '''
         for i, byte in enumerate(data.view(np.uint8)):
             self.persistent_write(address + i, int(byte))
         if refresh_config:
