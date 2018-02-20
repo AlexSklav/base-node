@@ -12,6 +12,9 @@ package:
   name: base-node
   version: {{ GIT_VERSION }}
 
+build:
+  noarch: true
+
 requirements:
   build:
     - paver
