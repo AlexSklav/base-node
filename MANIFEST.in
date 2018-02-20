@@ -1,8 +1,8 @@
 include README.md
-include RELEASE-VERSION
-include version.py
 include pavement.py
 include paver-minilib.zip
 include setup.py
 recursive-include base_node *
 prune *.pyc
+include versioneer.py
+include base_node/_version.py

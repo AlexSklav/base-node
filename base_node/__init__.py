@@ -1,5 +1,15 @@
 from __future__ import absolute_import
+
 from .driver import BaseNode, HIGH, LOW, INPUT, OUTPUT, INPUT_PULLUP
+from ._version import get_versions
+
+__version__ = get_versions()['version']
+del get_versions
+
+
+__all__ = ['__version__', 'BaseNode', 'HIGH', 'INPUT', 'INPUT_PULLUP', 'LOW',
+           'OUTPUT', 'get_firmwares', 'get_includes', 'get_sources',
+           'install_as_arduino_library', 'package_path']
 
 
 def package_path():
