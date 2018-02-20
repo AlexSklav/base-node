@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
 
@@ -37,8 +39,8 @@ def install_as_arduino_library():
         base_node.install_as_arduino_library(options.sketchbook_home,
                                              getattr(options, 'overwrite',
                                                      False))
-    except IOError, error:
-        print str(error)
+    except IOError as error:
+        print(str(error))
 
 @task
 @cmdopts([('sconsflags=', 'f', 'Flags to pass to SCons.')])
