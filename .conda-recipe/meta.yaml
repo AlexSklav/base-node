@@ -30,7 +30,7 @@ requirements:
     - platformio-tool-teensy
     - platformio-toolchain-atmelavr
     - platformio-toolchain-gccarmnoneeabi ==1.50401.0
-    - python
+    - python {{ python }}
     - path_helpers
     - numpy
 
@@ -41,7 +41,7 @@ requirements:
     - platformio-tool-scons
     - platformio-tool-avrdude
     - platformio-tool-teensy
-    - python
+    - python {{ python }}
     - path_helpers
     - numpy
 
