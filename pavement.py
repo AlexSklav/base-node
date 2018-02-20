@@ -15,12 +15,12 @@ import base_node
 
 # Setup script for path
 
-setup(name='wheeler.base-node',
+setup(name='base-node',
       version=version.getVersion(),
       description='Common base class/API for embedded hardware devices.',
-      author='Ryan Fobel',
-      author_email='ryan@fobel.net',
-      url='https://github.com/wheeler-microfluidics/base-node',
+      author='Ryan Fobel and Christian Fobel',
+      author_email='ryan@fobel.net and christian@fobel.net',
+      url='https://github.com/sci-bots/base-node',
       license='GPLv2',
       packages=['base_node'],
       include_package_data=True,

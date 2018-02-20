@@ -39,5 +39,5 @@ requirements:
     - numpy
 
 about:
-  home: https://github.com/wheeler-microfluidics/base-node
+  home: https://github.com/sci-bots/base-node
   license: BSD

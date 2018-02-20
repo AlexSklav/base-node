@@ -1,5 +1,4 @@
 @echo off
-set PKG_NAME=base-node
 set ARDUINO_NAME=BaseNode
 set PLATFORMIO_ENVS=uno teensy31
 
