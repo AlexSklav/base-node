@@ -1,3 +1,8 @@
+{% if GIT_DESCRIBE_NUMBER > '0' %}
+{% set GIT_VERSION = GIT_DESCRIBE_TAG[1:] + '.post' + GIT_DESCRIBE_NUMBER %}
+{% else %}
+{% set GIT_VERSION = GIT_DESCRIBE_TAG[1:] %}
+{% endif %}
 # source will be downloaded prior to filling in jinja templates
 # Example assumes that this folder has setup.py in it
 source:
@@ -5,38 +10,41 @@ source:
 
 package:
   name: base-node
-{% if GIT_DESCRIBE_NUMBER > '0' %}
-  version: {{ GIT_DESCRIBE_TAG[1:] }}.post{{ GIT_DESCRIBE_NUMBER }}
-{% else %}
-  version: {{ GIT_DESCRIBE_TAG[1:] }}{% if GIT_DESCRIBE_TAG.split('.')|length < 3 %}.0{% endif %}
-{% endif %}
+  version: {{ GIT_VERSION }}
+
+build:
+  noarch: true
 
 requirements:
   build:
+    - future
     - paver
     - pip
+    - platformio
     - platformio-framework-arduinoavr
-    - platformio-framework-arduinoteensy
+    - platformio-framework-arduinoteensy ==1.141.0
     - platformio-helpers
     - platformio-platform-atmelavr
     - platformio-tool-avrdude
     - platformio-tool-scons
     - platformio-tool-teensy
     - platformio-toolchain-atmelavr
-    - platformio-toolchain-gccarmnoneeabi
-    - python 2.7*
+    - platformio-toolchain-gccarmnoneeabi ==1.50401.0
+    - python {{ python }}
     - path_helpers
     - numpy
 
   run:
+    - future
+    - platformio
     - platformio-helpers
     - platformio-tool-scons
     - platformio-tool-avrdude
     - platformio-tool-teensy
-    - python 2.7*
+    - python {{ python }}
     - path_helpers
     - numpy
 
 about:
-  home: https://github.com/wheeler-microfluidics/base-node
+  home: https://github.com/sci-bots/base-node
   license: BSD

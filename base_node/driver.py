@@ -1,7 +1,9 @@
+from __future__ import absolute_import
 from struct import pack, unpack
 import uuid
 
 import numpy as np
+from six.moves import range
 
 PERSISTENT_UUID_ADDRESS = 8
 
@@ -154,7 +156,7 @@ class BaseNode(object):
         # Read enough bytes starting at specified address to match the
         # requested number of the specified data type.
         data_bytes = np.array([self.persistent_read(address + i)
-                               for i in xrange(nbytes)], dtype=np.uint8)
+                               for i in range(nbytes)], dtype=np.uint8)
 
         # Cast byte array as array of specified data type.
         result = data_bytes.view(dtype)
