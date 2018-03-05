@@ -3,44 +3,94 @@
 {% else %}
 {% set GIT_VERSION = GIT_DESCRIBE_TAG[1:] %}
 {% endif %}
+{% set PKG_NAME = 'base-node' %}
+{% set MODULE_NAME = PKG_NAME.replace('-', '_') %}
+{% set PLATFORMIO_ENVS = 'uno teensy31'.split(' ') %}
+{% set LIB_NAME = 'BaseNode' %}
 # source will be downloaded prior to filling in jinja templates
 # Example assumes that this folder has setup.py in it
 source:
   git_url: ../
 
 package:
-  name: base-node
+  name: {{ PKG_NAME }}
   version: {{ GIT_VERSION }}
+
+build:
+  noarch: python
+  script:
+    # Build firmware
+    - pio run
+    # Copy Arduino library to Conda include directory
+    - python -c
+        "import os.path; import os; import shutil; import platformio_helpers as pioh;
+        lib_src_dir = os.path.join(os.environ['SRC_DIR'], 'lib', '{{ LIB_NAME }}');
+        install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
+        shutil.copytree(lib_src_dir, install_dir);
+        "
+    # Copy compiled firmware to Conda bin directory
+    - python -c
+        "import os.path; import os; import shutil; import platformio_helpers as pioh;
+        SRC_DIR = os.environ['SRC_DIR'];
+        PIO_BIN_DIR = pioh.conda_bin_path().joinpath('{{ PKG_NAME }}');
+        created = (None if os.path.isdir(PIO_BIN_DIR)
+                   else os.makedirs(PIO_BIN_DIR));
+        shutil.copy2(os.path.join(SRC_DIR, 'platformio.ini'),
+                     os.path.join(PIO_BIN_DIR, 'platformio.ini'));
+        {% for pio_platform in PLATFORMIO_ENVS -%}
+        HEX_DIR = os.path.join(PIO_BIN_DIR, '{{ pio_platform }}');
+        os.makedirs(HEX_DIR);
+        shutil.copy2(os.path.join(SRC_DIR, '.pioenvs', '{{ pio_platform }}',
+                                  'firmware.hex'),
+                      os.path.join(PIO_BIN_DIR, '{{ pio_platform }}',
+                                   'firmware.hex'));
+        {%- endfor %}
+        "
+    # Generate `setup.py` from `pavement.py` definition.
+    - python -m paver generate_setup
+    # Install source directory as Python package.
+    - python setup.py install --single-version-externally-managed --record record.txt
 
 requirements:
   build:
-    - future
-    - paver
-    - pip
-    - platformio
-    - platformio-framework-arduinoavr
-    - platformio-framework-arduinoteensy ==1.141.0
-    - platformio-helpers
-    - platformio-platform-atmelavr
-    - platformio-tool-avrdude
-    - platformio-tool-scons
-    - platformio-tool-teensy
-    - platformio-toolchain-atmelavr
-    - platformio-toolchain-gccarmnoneeabi ==1.50401.0
     - python {{ python }}
-    - path_helpers
-    - numpy
+    - platformio-helpers >=0.6
 
-  run:
-    - future
-    - platformio
-    - platformio-helpers
-    - platformio-tool-scons
-    - platformio-tool-avrdude
-    - platformio-tool-teensy
-    - python {{ python }}
-    - path_helpers
-    - numpy
+outputs:
+  - name: {{ PKG_NAME }}-dev
+    noarch: generic
+    files:
+      - share
+  - name: {{ PKG_NAME }}
+    noarch: python
+    files:
+      - Lib/site-packages/{{ MODULE_NAME }}
+    requirements:
+      build:
+        - future
+        - paver
+        - pip
+        - platformio
+        - platformio-framework-arduinoavr
+        - platformio-framework-arduinoteensy ==1.141.0
+        - platformio-platform-atmelavr
+        - platformio-tool-avrdude
+        - platformio-tool-scons
+        - platformio-tool-teensy
+        - platformio-toolchain-atmelavr
+        - platformio-toolchain-gccarmnoneeabi ==1.50401.0
+        - path_helpers
+        - numpy
+      run:
+        - future
+        - platformio
+        - platformio-helpers >=0.6
+        - platformio-tool-scons
+        - platformio-tool-avrdude
+        - platformio-tool-teensy
+        - python {{ python }}
+        - path_helpers
+        - numpy
 
 about:
   home: https://github.com/sci-bots/base-node
