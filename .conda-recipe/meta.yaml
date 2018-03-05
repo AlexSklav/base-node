@@ -4,6 +4,7 @@
 {% set GIT_VERSION = GIT_DESCRIBE_TAG[1:] %}
 {% endif %}
 {% set PKG_NAME = 'base-node' %}
+{% set MODULE_NAME = PKG_NAME.replace('-', '_') %}
 {% set PLATFORMIO_ENVS = 'uno teensy31'.split(' ') %}
 {% set LIB_NAME = 'BaseNode' %}
 # source will be downloaded prior to filling in jinja templates
@@ -16,6 +17,7 @@ package:
   version: {{ GIT_VERSION }}
 
 build:
+  noarch: python
   script:
     # Build firmware
     - pio run
@@ -51,33 +53,44 @@ build:
 
 requirements:
   build:
-    - future
-    - paver
-    - pip
-    - platformio
-    - platformio-framework-arduinoavr
-    - platformio-framework-arduinoteensy ==1.141.0
-    - platformio-helpers >=0.6
-    - platformio-platform-atmelavr
-    - platformio-tool-avrdude
-    - platformio-tool-scons
-    - platformio-tool-teensy
-    - platformio-toolchain-atmelavr
-    - platformio-toolchain-gccarmnoneeabi ==1.50401.0
     - python {{ python }}
-    - path_helpers
-    - numpy
+    - platformio-helpers >=0.6
 
-  run:
-    - future
-    - platformio
-    - platformio-helpers >=0.6
-    - platformio-tool-scons
-    - platformio-tool-avrdude
-    - platformio-tool-teensy
-    - python {{ python }}
-    - path_helpers
-    - numpy
+outputs:
+  - name: {{ PKG_NAME }}-dev
+    noarch: generic
+    files:
+      - share
+  - name: {{ PKG_NAME }}
+    noarch: python
+    files:
+      - Lib/site-packages/{{ MODULE_NAME }}
+    requirements:
+      build:
+        - future
+        - paver
+        - pip
+        - platformio
+        - platformio-framework-arduinoavr
+        - platformio-framework-arduinoteensy ==1.141.0
+        - platformio-platform-atmelavr
+        - platformio-tool-avrdude
+        - platformio-tool-scons
+        - platformio-tool-teensy
+        - platformio-toolchain-atmelavr
+        - platformio-toolchain-gccarmnoneeabi ==1.50401.0
+        - path_helpers
+        - numpy
+      run:
+        - future
+        - platformio
+        - platformio-helpers >=0.6
+        - platformio-tool-scons
+        - platformio-tool-avrdude
+        - platformio-tool-teensy
+        - python {{ python }}
+        - path_helpers
+        - numpy
 
 about:
   home: https://github.com/sci-bots/base-node
