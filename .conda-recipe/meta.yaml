@@ -54,7 +54,7 @@ build:
 requirements:
   build:
     - python {{ python }}
-    - platformio-helpers >=0.6
+    - platformio-helpers >=0.7
 
 outputs:
   - name: {{ PKG_NAME }}-dev
@@ -70,26 +70,26 @@ outputs:
         - future
         - paver
         - pip
-        - platformio
-        - platformio-framework-arduinoavr
+        - platformio >=3.5.2b2.post19
+        - platformio-framework-arduinoavr >=1.10620.2
         - platformio-framework-arduinoteensy ==1.141.0
-        - platformio-platform-atmelavr
-        - platformio-tool-avrdude
-        - platformio-tool-scons
-        - platformio-tool-teensy
-        - platformio-toolchain-atmelavr
+        - platformio-platform-atmelavr >=1.8.1.post1
+        - platformio-tool-avrdude >=1.60300.2
+        - platformio-tool-scons >=3.30001.0
+        - platformio-tool-teensy >=1.141.0
+        - platformio-toolchain-atmelavr >=1.40902.1
         - platformio-toolchain-gccarmnoneeabi ==1.50401.0
-        - path_helpers
+        - path_helpers >=0.7
         - numpy
       run:
         - future
-        - platformio
-        - platformio-helpers >=0.6
-        - platformio-tool-scons
-        - platformio-tool-avrdude
-        - platformio-tool-teensy
+        - platformio >=3.5.2b2.post19
+        - platformio-helpers >=0.7
+        - platformio-tool-scons >=3.30001.0
+        - platformio-tool-avrdude >=1.60300.2
+        - platformio-tool-teensy >=1.141.0
         - python {{ python }}
-        - path_helpers
+        - path_helpers >=0.7
         - numpy
 
 about:
