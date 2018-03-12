@@ -53,7 +53,7 @@ build:
 
 requirements:
   build:
-    - python {{ python }}
+    - python
     - platformio-helpers >=0.7
 
 outputs:
@@ -61,6 +61,11 @@ outputs:
     noarch: generic
     files:
       - share
+    requirements:
+      run:
+        - platformio-tool-avrdude >=1.60300.2
+        - platformio-tool-scons >=3.30001.0
+        - platformio-tool-teensy >=1.141.0
   - name: {{ PKG_NAME }}
     noarch: python
     files:
@@ -74,21 +79,22 @@ outputs:
         - platformio-framework-arduinoavr >=1.10620.2
         - platformio-framework-arduinoteensy ==1.141.0
         - platformio-platform-atmelavr >=1.8.1.post1
+        - platformio-toolchain-atmelavr >=1.40902.1
+        - platformio-toolchain-gccarmnoneeabi ==1.50401.0
         - platformio-tool-avrdude >=1.60300.2
         - platformio-tool-scons >=3.30001.0
         - platformio-tool-teensy >=1.141.0
-        - platformio-toolchain-atmelavr >=1.40902.1
-        - platformio-toolchain-gccarmnoneeabi ==1.50401.0
         - path_helpers >=0.7
         - numpy
       run:
+        - {{ pin_subpackage(PKG_NAME + '-dev', max_pin='x.x') }}
         - future
         - platformio >=3.5.2b2.post19
         - platformio-helpers >=0.7
         - platformio-tool-scons >=3.30001.0
         - platformio-tool-avrdude >=1.60300.2
         - platformio-tool-teensy >=1.141.0
-        - python {{ python }}
+        - python
         - path_helpers >=0.7
         - numpy
 
