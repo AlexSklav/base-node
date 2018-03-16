@@ -54,7 +54,7 @@ build:
 requirements:
   build:
     - python
-    - platformio-helpers >=0.7
+    - platformio-helpers >=0.8
 
 outputs:
   - name: {{ PKG_NAME }}-dev
@@ -90,7 +90,7 @@ outputs:
         - {{ pin_subpackage(PKG_NAME + '-dev', max_pin='x.x') }}
         - future
         - platformio >=3.5.2b2.post19
-        - platformio-helpers >=0.7
+        - platformio-helpers >=0.8
         - platformio-tool-scons >=3.30001.0
         - platformio-tool-avrdude >=1.60300.2
         - platformio-tool-teensy >=1.141.0
