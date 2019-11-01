@@ -1,8 +1,12 @@
 #include "Arduino.h"
+#ifndef NO_EEPROM
 #include <avr/eeprom.h>
+#endif
 #include <math.h>
 #include <Wire.h>
+#ifndef NO_EEPROM
 #include <EEPROM.h>
+#endif
 
 #include "BaseNode.h"
 
@@ -49,13 +53,20 @@ void BaseNode::begin(uint32_t baudrate) {
       digitalWrite(RESET_LATCH, HIGH);
       pinMode(RESET_LATCH, OUTPUT);
     }
+#ifndef NO_SERIAL
     Serial.begin(baudrate);
+#endif
+#ifndef NO_EEPROM
     load_config();
+#ifndef NO_SERIAL
     dump_config();
+#endif
+#endif
     Wire.onRequest(handle_wire_request);
     Wire.onReceive(handle_wire_receive);
 }
 
+#ifndef NO_SERIAL
 bool BaseNode::read_serial_command() {
   if (Serial.available()) {
     byte len = Serial.readBytesUntil('\n', buffer_,
@@ -66,9 +77,11 @@ bool BaseNode::read_serial_command() {
   }
   return false;
 }
+#endif
 
 /* Process any available requests on the serial port, or through Wire/I2C. */
 void BaseNode::listen() {
+#ifndef NO_SERIAL
   if (read_serial_command()) {
     // A new-line-terminated command was successfully read into the buffer.
     // Call `ProcessSerialInput` to handle process command string.
@@ -76,6 +89,7 @@ void BaseNode::listen() {
       error(RETURN_UNKNOWN_COMMAND);
     }
   }
+#endif
   if (wire_command_received_) {
     bytes_written_ = 0;
     bytes_read_ = 0;
@@ -87,6 +101,7 @@ void BaseNode::listen() {
     }
     wire_command_received_ = false;
 
+#ifndef NO_EEPROM
     if (supports_isp()) {
       // If this command is changing the programming mode, wait for
       // a specified delay before setting/resetting the latch; otherwise,
@@ -96,6 +111,7 @@ void BaseNode::listen() {
         update_programming_mode_state();
       }
     }
+#endif
   }
 }
 
@@ -107,6 +123,8 @@ void BaseNode::serialize(const uint8_t* u, const uint16_t size) {
     bytes_written_ += size;
 }
 
+#ifndef NO_EEPROM
+#ifndef NO_SERIAL
 /* Print the configuration of the extension module to the serial port. */
 void BaseNode::dump_config() {
     Serial.println(String(name()) + " v" + String(hardware_version()));
@@ -124,6 +142,7 @@ void BaseNode::dump_config() {
       Serial.println(P("supports_ISP=false"));
     }
 }
+#endif  // #ifndef NO_SERIAL
 
 void BaseNode::set_programming_mode(bool on) {
   base_config_settings_.programming_mode = on;
@@ -144,9 +163,12 @@ void BaseNode::update_programming_mode_state() {
     digitalWrite(RESET_LATCH, HIGH);
   }
 }
+#endif
 
+#ifndef NO_SERIAL
 /* If there is a request pending on the serial port, process it. */
 bool BaseNode::process_serial_input() {
+#ifndef NO_EEPROM
     if (match_function(P("reset_config()"))) {
         load_config(true);
         dump_config();
@@ -172,9 +194,9 @@ bool BaseNode::process_serial_input() {
       for (uint8_t i = 0; i < 16; i++) {
         if (read_hex(b)) {
           uuid[i] = b;
-	} else {
-	  return false;
-	}
+        } else {
+        return false;
+        }
       }
       set_uuid(uuid);
       return true;
@@ -187,10 +209,12 @@ bool BaseNode::process_serial_input() {
       }
       return true;
     }
+#endif
 
     /* Command was not processed */
     return false;
 }
+#endif  // #ifndef NO_SERIAL
 
 bool BaseNode::match_function(const char* function_name) {
   if (strstr(buffer_, "()")) {
@@ -208,6 +232,7 @@ bool BaseNode::match_function(const char* function_name) {
   }
 }
 
+#ifndef NO_EEPROM
 uint8_t BaseNode::persistent_read(uint16_t address) {
   return EEPROM.read(address);
 }
@@ -215,6 +240,7 @@ uint8_t BaseNode::persistent_read(uint16_t address) {
 void BaseNode::persistent_write(uint16_t address, uint8_t value) {
   EEPROM.write(address, value);
 }
+#endif
 
 /* If there is a request pending from the I2C bus, process it. */
 void BaseNode::process_wire_command() {
@@ -275,6 +301,7 @@ void BaseNode::process_wire_command() {
       return_code_ = RETURN_BAD_PACKET_SIZE;
     }
     break;
+#ifndef NO_EEPROM
   case CMD_SET_PROGRAMMING_MODE:
     if (supports_isp()) {
       if (payload_length() == 1) {
@@ -316,11 +343,14 @@ void BaseNode::process_wire_command() {
       return_code_ = RETURN_BAD_PACKET_SIZE;
     }
     break;
+#endif
   case CMD_SET_PIN_MODE:
     if (payload_length() == 2) {
       uint8_t pin = read<uint8_t>();
       uint8_t mode = read<uint8_t>();
+#ifndef NO_SERIAL
       Serial.println("pinMode(" + String(pin) + ", " + String(mode) + ")");
+#endif
       pinMode(pin, mode);
       return_code_ = RETURN_OK;
     } else {
@@ -331,8 +361,10 @@ void BaseNode::process_wire_command() {
     if (payload_length() == 2) {
       uint8_t pin = read<uint8_t>();
       uint8_t value = read<uint8_t>();
+#ifndef NO_SERIAL
       Serial.println("digitalWrite(" + String(pin) + ", " + String(value) + \
         ")");
+#endif
       digitalWrite(pin, value);
       return_code_ = RETURN_OK;
     } else {
@@ -343,7 +375,9 @@ void BaseNode::process_wire_command() {
     if (payload_length() == 1) {
       uint8_t pin = read<uint8_t>();
       uint8_t value = digitalRead(pin);
+#ifndef NO_SERIAL
       Serial.println("digitalRead(" + String(pin) + ") = " + String(value));
+#endif
       serialize(&value, sizeof(value));
       return_code_ = RETURN_OK;
     } else {
@@ -354,7 +388,9 @@ void BaseNode::process_wire_command() {
     if (payload_length() == 2) {
       uint8_t pin =  read<uint8_t>();
       uint16_t value = read<uint16_t>();
+#ifndef NO_SERIAL
       Serial.println("analogWrite(" + String(pin) + ", " + String(value) + ")");
+#endif
       analogWrite(pin, value);
       return_code_ = RETURN_OK;
     } else {
@@ -365,7 +401,9 @@ void BaseNode::process_wire_command() {
     if (payload_length() == 1) {
       uint8_t pin = read<uint8_t>();
       uint16_t value = analogRead(pin);
+#ifndef NO_SERIAL
       Serial.println("analogRead(" + String(pin) + ") = " + String(value));
+#endif
       serialize(&value, sizeof(value));
       return_code_ = RETURN_OK;
     } else {
@@ -378,7 +416,9 @@ void BaseNode::process_wire_command() {
 }
 
 void BaseNode::error(uint8_t code) {
+#ifndef NO_SERIAL
   Serial.println(P("Error ") + String(code, DEC));
+#endif
 }
 
 bool BaseNode::read_int(int32_t &value) {
@@ -443,6 +483,7 @@ String BaseNode::version_string(Version version) {
          String(version.micro);
 }
 
+#ifndef NO_EEPROM
 BaseNode::Version BaseNode::base_config_version() {
   Version base_config_version;
   eeprom_read_block((void*)&base_config_version, (void*)EEPROM_CONFIG_SETTINGS,
@@ -462,7 +503,7 @@ void BaseNode::load_config(bool use_defaults) {
     base_config_settings_.version.major=0;
     base_config_settings_.version.minor=0;
     base_config_settings_.version.micro=3;
-    base_config_settings_.i2c_address = 10;
+    base_config_settings_.i2c_address = 70;
     base_config_settings_.programming_mode = 0;
     memset(base_config_settings_.uuid, 0, 16);
     memset(base_config_settings_.pin_mode, 0, 9);
@@ -497,9 +538,11 @@ void BaseNode::load_config(bool use_defaults) {
     }
   }
 
+#ifndef NO_EEPROM
   if (supports_isp()) {
     update_programming_mode_state();
   }
+#endif
 
   Wire.begin(base_config_settings_.i2c_address);
 }
@@ -512,10 +555,13 @@ void BaseNode::save_config() {
 
 void BaseNode::set_uuid(uint8_t uuid[16]) {
   memcpy(base_config_settings_.uuid, uuid, 16);
+#ifndef NO_SERIAL
   print_uuid();
+#endif
   save_config();
 }
 
+#ifndef NO_SERIAL
 void BaseNode::print_uuid() {
   Serial.print(P("uuid="));
   for (uint8_t i = 0; i < 16; i++) {
@@ -526,6 +572,7 @@ void BaseNode::print_uuid() {
   }
   Serial.println();
 }
+#endif
 
 void BaseNode::set_i2c_address(uint8_t address) {
   base_config_settings_.i2c_address = address;
@@ -534,4 +581,5 @@ void BaseNode::set_i2c_address(uint8_t address) {
                  DEC));
   save_config();
 }
+#endif  // #ifndef NO_EEPROM
 
