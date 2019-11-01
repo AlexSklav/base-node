@@ -64,6 +64,11 @@ void BaseNode::begin(uint32_t baudrate) {
 #endif
     Wire.onRequest(handle_wire_request);
     Wire.onReceive(handle_wire_receive);
+
+#ifdef I2C_CLOCK
+    // set the i2c clock
+    Wire.setClock(I2C_CLOCK);
+#endif  // #ifdef I2C_CLOCK
 }
 
 #ifndef NO_SERIAL
