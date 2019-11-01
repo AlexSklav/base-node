@@ -5,7 +5,7 @@
 {% endif %}
 {% set PKG_NAME = 'base-node' %}
 {% set MODULE_NAME = PKG_NAME.replace('-', '_') %}
-{% set PLATFORMIO_ENVS = 'uno teensy31'.split(' ') %}
+{% set PLATFORMIO_ENVS = '328pv2_1 328pv3_1 atmega8 uno teensy31'.split(' ') %}
 {% set LIB_NAME = 'BaseNode' %}
 # source will be downloaded prior to filling in jinja templates
 # Example assumes that this folder has setup.py in it
