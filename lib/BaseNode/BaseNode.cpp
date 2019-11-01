@@ -1,9 +1,11 @@
+#ifndef NO_WATCHDOG
+#include <avr/wdt.h>
+#endif  // #ifndef NO_WATCHDOG
 #include "Arduino.h"
 #ifndef NO_EEPROM
 #include <avr/eeprom.h>
 #endif
 #include <math.h>
-#include <Wire.h>
 #ifndef NO_EEPROM
 #include <EEPROM.h>
 #endif
@@ -11,6 +13,17 @@
 #include "BaseNode.h"
 
 #define P(str) (strcpy_P(p_buffer_, PSTR(str)), p_buffer_)
+
+
+#ifndef NO_WATCHDOG
+void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
+
+void wdt_init(void) {
+  MCUSR = 0;
+  wdt_disable();
+  return;
+}
+#endif  // #ifndef NO_WATCHDOG
 
 
 // initialize static members
