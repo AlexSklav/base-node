@@ -71,7 +71,11 @@ public:
   static const uint8_t RETURN_BAD_VALUE =             0x08;
   static const uint8_t RETURN_MAX_PAYLOAD_EXCEEDED =  0x09;
 
+#ifndef MAX_PAYLOAD_LENGTH_
   static const uint16_t MAX_PAYLOAD_LENGTH = 100;
+#else
+  static const uint16_t MAX_PAYLOAD_LENGTH = MAX_PAYLOAD_LENGTH_;
+#endif
 #ifndef BAUD_RATE
   static const uint32_t DEFAULT_BAUD_RATE = 115200;
 #endif
