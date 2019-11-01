@@ -61,6 +61,8 @@ public:
 
   //! Perform a software reboot.
   static constexpr uint8_t CMD_REBOOT = 0xA2;
+  //! Reset configuration to default.
+  static constexpr uint8_t CMD_RESET_CONFIG = 0xA3;
 
   // reserved return codes
   static const uint8_t RETURN_OK =                    0x00;

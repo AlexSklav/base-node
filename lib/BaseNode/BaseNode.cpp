@@ -427,6 +427,9 @@ void BaseNode::process_wire_command() {
       } while(0);
       break;
 #endif  // #ifndef NO_WATCHDOG
+  case CMD_RESET_CONFIG:
+    load_config(true);
+    break;
   default:
     break;
   }
