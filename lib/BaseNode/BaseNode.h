@@ -157,6 +157,7 @@ protected:
     bytes_read_ += size;
     return result;
   }
+#ifndef NO_BROADCAST_API
   /**
    * @brief Enable/disable receiving of broadcasts, i.e., messages sent to
    * address 0.
@@ -178,6 +179,7 @@ protected:
    * @return `true` if receiving of broadcasts is **enabled**.
    */
   bool general_call() const { return TWAR & 0x01; }
+#endif  // #ifndef NO_BROADCAST_API
 
   String version_string(Version version);
 #ifndef NO_SERIAL
