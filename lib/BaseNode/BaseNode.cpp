@@ -64,6 +64,18 @@ void BaseNode::begin(uint32_t baudrate) {
 #endif
     Wire.onRequest(handle_wire_request);
     Wire.onReceive(handle_wire_receive);
+
+#ifdef I2C_CLOCK
+    // set the i2c clock
+    Wire.setClock(I2C_CLOCK);
+#endif  // #ifdef I2C_CLOCK
+
+#ifndef NO_BROADCAST
+    // By default, enable receiving of broadcast messages (i.e., messages sent to
+    // address 0).  This can be enabled/disabled through the
+    // `CMD_SET_GENERAL_CALL_ENABLED` I2C command.
+    general_call(true);
+#endif  // #ifndef NO_BROADCAST
 }
 
 #ifndef NO_SERIAL
@@ -409,6 +421,35 @@ void BaseNode::process_wire_command() {
     } else {
       return_code_ = RETURN_BAD_PACKET_SIZE;
     }
+    break;
+  case CMD_GET_GENERAL_CALL_ENABLED:
+    {
+      const uint8_t general_call_enabled = general_call();
+      serialize(&general_call_enabled, sizeof(general_call_enabled));
+    }
+    return_code_ = RETURN_OK;
+    break;
+  case CMD_SET_GENERAL_CALL_ENABLED:
+    {
+      const uint8_t general_call_enabled = read<uint8_t>();
+      general_call(general_call_enabled);
+    }
+    return_code_ = RETURN_OK;
+    break;
+#ifndef NO_WATCHDOG
+  case CMD_REBOOT:
+      // Reboot.
+#ifndef NO_SERIAL
+      Serial.println("Rebooting...");
+#endif  // #ifndef NO_SERIAL
+      do {
+        wdt_enable(WDTO_15MS);
+        for(;;) {}
+      } while(0);
+      break;
+#endif  // #ifndef NO_WATCHDOG
+  case CMD_RESET_CONFIG:
+    load_config(true);
     break;
   default:
     break;

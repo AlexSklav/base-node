@@ -59,6 +59,20 @@ public:
   static const uint8_t CMD_SET_PROGRAMMING_MODE =     0x9C;
 #endif
 
+  //! Perform a software reboot.
+  static constexpr uint8_t CMD_REBOOT = 0xA2;
+  //! Reset configuration to default.
+  static constexpr uint8_t CMD_RESET_CONFIG = 0xA3;
+  /**
+   * @brief Enable/disable receiving of broadcast messages (i.e., messages sent
+   * to address 0).
+   */
+  static constexpr uint8_t CMD_SET_GENERAL_CALL_ENABLED = 0xA4;
+   /**
+    * @brief Get current broadcast receiving setting.
+    */
+  static constexpr uint8_t CMD_GET_GENERAL_CALL_ENABLED = 0xA5;
+
   // reserved return codes
   static const uint8_t RETURN_OK =                    0x00;
   static const uint8_t RETURN_GENERAL_ERROR =         0x01;
@@ -71,8 +85,12 @@ public:
   static const uint8_t RETURN_BAD_VALUE =             0x08;
   static const uint8_t RETURN_MAX_PAYLOAD_EXCEEDED =  0x09;
 
+#ifndef MAX_PAYLOAD_LENGTH_
   static const uint16_t MAX_PAYLOAD_LENGTH = 100;
-#ifndef DEFAULT_BAUD_RATE
+#else
+  static const uint16_t MAX_PAYLOAD_LENGTH = MAX_PAYLOAD_LENGTH_;
+#endif
+#ifndef BAUD_RATE
   static const uint32_t DEFAULT_BAUD_RATE = 115200;
 #endif
 
@@ -137,6 +155,27 @@ protected:
     bytes_read_ += size;
     return result;
   }
+  /**
+   * @brief Enable/disable receiving of broadcasts, i.e., messages sent to
+   * address 0.
+   *
+   * @param state  If `true`, **enable**.  Otherwise, **disable**.
+   */
+  void general_call(bool state) {
+    if (state) {
+      // Enable receiving of broadcasts, i.e., messages sent to address 0.
+      TWAR |= 1;
+    } else {
+      // Disable receiving of broadcasts, i.e., messages sent to address 0.
+      TWAR &= ~0x01;
+    }
+  }
+  /**
+   * @brief Broadcast receiving setting.
+   *
+   * @return `true` if receiving of broadcasts is **enabled**.
+   */
+  bool general_call() const { return TWAR & 0x01; }
 
   String version_string(Version version);
 #ifndef NO_SERIAL

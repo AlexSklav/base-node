@@ -46,7 +46,7 @@ RETURN_MAX_PAYLOAD_EXCEEDED = 0x09
 
 
 def replace(self, **kwargs):
-    dict_ = OrderedDict(zip(dir(self)[1:], self))
+    dict_ = OrderedDict((k, getattr(self, k)) for k in dir(self)[1:])
     dict_.update(**kwargs)
     return self.__class__(**dict_)
 
@@ -95,6 +95,8 @@ class Driver:
 
 
 class BaseDriver(Driver):
+    from collections import namedtuple
+
     CONFIG_STRUCT_STR = '<hhhBB16s9s9s'
     CONFIG_STRUCT_SIZE = struct.calcsize(CONFIG_STRUCT_STR)
     Config = namedtuple('Config', 'version_major version_minor version_patch i2c_address programming_mode uuid pin_mode_bytes pin_state_bytes')
