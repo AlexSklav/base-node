@@ -28,6 +28,13 @@ build:
         install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
         shutil.copytree(lib_src_dir, install_dir);
         "
+    # Copy MicroPython library to Conda MicroPython lib directory
+    - python -c
+        "import os.path; import os; import shutil; import platformio_helpers as pioh;
+        lib_src_dir = os.path.join(os.environ['SRC_DIR'], 'micropython-src', '{{ MODULE_NAME }}');
+        install_dir = pioh.conda_bin_path().parent.joinpath('micropython-lib', '{{ MODULE_NAME }}');
+        shutil.copytree(lib_src_dir, install_dir);
+        "
     # Copy compiled firmware to Conda bin directory
     - python -c
         "import os.path; import os; import shutil; import platformio_helpers as pioh;
