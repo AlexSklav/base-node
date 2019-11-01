@@ -23,16 +23,6 @@ const char BaseNode::SOFTWARE_VERSION_[] PROGMEM = ___SOFTWARE_VERSION___;
 const char BaseNode::URL_[] PROGMEM = "http://microfluidics.utoronto.ca/dropbot";
 
 
-#ifndef NO_WATCHDOG
-void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
-
-void wdt_init(void) {
-  MCUSR = 0;
-  wdt_disable();
-  return;
-}
-#endif  // #ifndef NO_WATCHDOG
-
 void setup() {
   Node.begin();
 }

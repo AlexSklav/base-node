@@ -1,9 +1,11 @@
+#ifndef NO_WATCHDOG
+#include <avr/wdt.h>
+#endif  // #ifndef NO_WATCHDOG
 #include "Arduino.h"
 #ifndef NO_EEPROM
 #include <avr/eeprom.h>
 #endif
 #include <math.h>
-#include <Wire.h>
 #ifndef NO_EEPROM
 #include <EEPROM.h>
 #endif
@@ -11,6 +13,17 @@
 #include "BaseNode.h"
 
 #define P(str) (strcpy_P(p_buffer_, PSTR(str)), p_buffer_)
+
+
+#ifndef NO_WATCHDOG
+void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
+
+void wdt_init(void) {
+  MCUSR = 0;
+  wdt_disable();
+  return;
+}
+#endif  // #ifndef NO_WATCHDOG
 
 
 // initialize static members
@@ -70,12 +83,12 @@ void BaseNode::begin(uint32_t baudrate) {
     Wire.setClock(I2C_CLOCK);
 #endif  // #ifdef I2C_CLOCK
 
-#ifndef NO_BROADCAST
+#if !defined(NO_BROADCAST) and !defined(NO_BROADCAST_API)
     // By default, enable receiving of broadcast messages (i.e., messages sent to
     // address 0).  This can be enabled/disabled through the
     // `CMD_SET_GENERAL_CALL_ENABLED` I2C command.
     general_call(true);
-#endif  // #ifndef NO_BROADCAST
+#endif  // #if !defined(NO_BROADCAST) and !defined(NO_BROADCAST_API)
 }
 
 #ifndef NO_SERIAL
@@ -422,6 +435,7 @@ void BaseNode::process_wire_command() {
       return_code_ = RETURN_BAD_PACKET_SIZE;
     }
     break;
+#ifndef NO_BROADCAST_API
   case CMD_GET_GENERAL_CALL_ENABLED:
     {
       const uint8_t general_call_enabled = general_call();
@@ -436,6 +450,7 @@ void BaseNode::process_wire_command() {
     }
     return_code_ = RETURN_OK;
     break;
+#endif  // #ifndef NO_BROADCAST_API
 #ifndef NO_WATCHDOG
   case CMD_REBOOT:
       // Reboot.
