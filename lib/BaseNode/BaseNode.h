@@ -59,6 +59,9 @@ public:
   static const uint8_t CMD_SET_PROGRAMMING_MODE =     0x9C;
 #endif
 
+  //! Perform a software reboot.
+  static constexpr uint8_t CMD_REBOOT = 0xA2;
+
   // reserved return codes
   static const uint8_t RETURN_OK =                    0x00;
   static const uint8_t RETURN_GENERAL_ERROR =         0x01;

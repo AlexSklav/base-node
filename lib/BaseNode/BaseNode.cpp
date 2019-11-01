@@ -415,6 +415,18 @@ void BaseNode::process_wire_command() {
       return_code_ = RETURN_BAD_PACKET_SIZE;
     }
     break;
+#ifndef NO_WATCHDOG
+  case CMD_REBOOT:
+      // Reboot.
+#ifndef NO_SERIAL
+      Serial.println("Rebooting...");
+#endif  // #ifndef NO_SERIAL
+      do {
+        wdt_enable(WDTO_15MS);
+        for(;;) {}
+      } while(0);
+      break;
+#endif  // #ifndef NO_WATCHDOG
   default:
     break;
   }
