@@ -92,6 +92,8 @@ public:
 #endif
 #ifndef BAUD_RATE
   static const uint32_t DEFAULT_BAUD_RATE = 115200;
+#else
+  static const uint32_t DEFAULT_BAUD_RATE = BAUD_RATE;
 #endif
 
   static void handle_wire_receive(int n_bytes);
