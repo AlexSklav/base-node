@@ -5,7 +5,7 @@
 {% endif %}
 {% set PKG_NAME = 'base-node' %}
 {% set MODULE_NAME = PKG_NAME.replace('-', '_') %}
-{% set PLATFORMIO_ENVS = 'uno teensy31'.split(' ') %}
+{% set PLATFORMIO_ENVS = '328pv2_1 328pv3_1 atmega8 uno teensy31'.split(' ') %}
 {% set LIB_NAME = 'BaseNode' %}
 # source will be downloaded prior to filling in jinja templates
 # Example assumes that this folder has setup.py in it
@@ -26,6 +26,13 @@ build:
         "import os.path; import os; import shutil; import platformio_helpers as pioh;
         lib_src_dir = os.path.join(os.environ['SRC_DIR'], 'lib', '{{ LIB_NAME }}');
         install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
+        shutil.copytree(lib_src_dir, install_dir);
+        "
+    # Copy MicroPython library to Conda MicroPython lib directory
+    - python -c
+        "import os.path; import os; import shutil; import platformio_helpers as pioh;
+        lib_src_dir = os.path.join(os.environ['SRC_DIR'], 'micropython-src', '{{ MODULE_NAME }}');
+        install_dir = pioh.conda_bin_path().parent.joinpath('micropython-lib', '{{ MODULE_NAME }}');
         shutil.copytree(lib_src_dir, install_dir);
         "
     # Copy compiled firmware to Conda bin directory
@@ -53,8 +60,22 @@ build:
 
 requirements:
   build:
-    - python
+    - future
+    - numpy
+    - path_helpers >=0.7
+    - paver
+    - pip
+    - platformio >=3.5.2b2.post19
+    - platformio-framework-arduinoavr >=1.10620.2
+    - platformio-framework-arduinoteensy ==1.141.0
     - platformio-helpers >=0.8
+    - platformio-platform-atmelavr >=1.8.1.post1
+    - platformio-tool-avrdude >=1.60300.2
+    - platformio-tool-scons >=3.30001.0
+    - platformio-tool-teensy >=1.141.0
+    - platformio-toolchain-atmelavr >=1.40902.1
+    - platformio-toolchain-gccarmnoneeabi ==1.50401.0
+    - python
 
 outputs:
   - name: {{ PKG_NAME }}-dev
@@ -71,21 +92,6 @@ outputs:
     files:
       - Lib/site-packages/{{ MODULE_NAME }}
     requirements:
-      build:
-        - future
-        - paver
-        - pip
-        - platformio >=3.5.2b2.post19
-        - platformio-framework-arduinoavr >=1.10620.2
-        - platformio-framework-arduinoteensy ==1.141.0
-        - platformio-platform-atmelavr >=1.8.1.post1
-        - platformio-toolchain-atmelavr >=1.40902.1
-        - platformio-toolchain-gccarmnoneeabi ==1.50401.0
-        - platformio-tool-avrdude >=1.60300.2
-        - platformio-tool-scons >=3.30001.0
-        - platformio-tool-teensy >=1.141.0
-        - path_helpers >=0.7
-        - numpy
       run:
         - {{ pin_subpackage(PKG_NAME + '-dev', max_pin='x.x') }}
         - future

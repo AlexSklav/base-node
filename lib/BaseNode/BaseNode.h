@@ -27,11 +27,13 @@ public:
       uint8_t pin_state[9];
   };
 
+#ifndef NO_EEPROM
   // Persistent storage _(e.g., EEPROM)_ addresses.
   static const uint16_t EEPROM_CONFIG_SETTINGS =      	    0;
   static const uint16_t PERSISTENT_UUID_ADDRESS =           8;
   static const uint16_t PERSISTENT_PIN_MODE_ADDRESS =      24;
   static const uint16_t PERSISTENT_PIN_STATE_ADDRESS =     33;
+#endif
 
   // reserved commands
   static const uint8_t CMD_GET_PROTOCOL_NAME =        0x80;
@@ -42,16 +44,20 @@ public:
   static const uint8_t CMD_GET_SOFTWARE_VERSION =     0x85;
   static const uint8_t CMD_GET_URL =                  0x86;
 
+#ifndef NO_EEPROM
   static const uint8_t CMD_PERSISTENT_READ =          0x90;
   static const uint8_t CMD_PERSISTENT_WRITE =         0x91;
   static const uint8_t CMD_LOAD_CONFIG =              0x92;
+#endif
   static const uint8_t CMD_SET_PIN_MODE =             0x93;
   static const uint8_t CMD_DIGITAL_READ =             0x94;
   static const uint8_t CMD_DIGITAL_WRITE =            0x95;
   static const uint8_t CMD_ANALOG_READ =              0x96;
   static const uint8_t CMD_ANALOG_WRITE =             0x97;
 
+#ifndef NO_EEPROM
   static const uint8_t CMD_SET_PROGRAMMING_MODE =     0x9C;
+#endif
 
   // reserved return codes
   static const uint8_t RETURN_OK =                    0x00;
@@ -66,7 +72,9 @@ public:
   static const uint8_t RETURN_MAX_PAYLOAD_EXCEEDED =  0x09;
 
   static const uint16_t MAX_PAYLOAD_LENGTH = 100;
+#ifndef DEFAULT_BAUD_RATE
   static const uint32_t DEFAULT_BAUD_RATE = 115200;
+#endif
 
   static void handle_wire_receive(int n_bytes);
   static void handle_wire_request();
@@ -84,16 +92,18 @@ public:
   const char* manufacturer() { return prog_string(MANUFACTURER_); }
 
   virtual void listen();
-  void set_i2c_address(uint8_t address);
-  void set_uuid(uint8_t uuid[16]);
   Version base_config_version();
   bool match_function(const char* function_name);
   void set_debug(bool debug) { debug_ = debug; }
+#ifndef NO_EEPROM
+  void set_i2c_address(uint8_t address);
+  void set_uuid(uint8_t uuid[16]);
   /* The following two `persistent...` methods provide sub-classes a mechanism
    * to customize persistent storage.  For example, the Arduino DUE does not
    * support the `EEPROM` library used by the AVR chips. */
   virtual uint8_t persistent_read(uint16_t address);
   virtual void persistent_write(uint16_t address, uint8_t value);
+#endif
   static uint16_t payload_length() { return payload_length_; }
 
   static bool send_payload_length_;
@@ -106,11 +116,15 @@ public:
   static char p_buffer_[100];
 protected:
   virtual void process_wire_command();
+#ifndef NO_SERIAL
   virtual bool process_serial_input();
+#endif
   // inheritted classes should override this method if they support ISP
   virtual bool supports_isp() { return false; }
+#ifndef NO_EEPROM
   void set_programming_mode(bool on);
   void update_programming_mode_state();
+#endif
   BaseConfigSettings base_config_settings_;
   uint8_t return_code_;
   template<typename T> void serialize(T data, uint16_t size) {
@@ -125,16 +139,24 @@ protected:
   }
 
   String version_string(Version version);
+#ifndef NO_SERIAL
   void print_uuid();
+#endif
   bool read_value(char* &str, char* &end);
   bool read_int(int32_t &value);
   bool read_hex(int32_t &value);
   bool read_float(float &value);
+#ifndef NO_SERIAL
   bool read_serial_command();
+#endif
   void error(uint8_t code);
+#ifndef NO_EEPROM
+#ifndef NO_SERIAL
   virtual void dump_config();
+#endif
   virtual void load_config(bool use_defaults=false);
   virtual void save_config();
+#endif
 
   static const char SOFTWARE_VERSION_[] PROGMEM;
   static const char NAME_[] PROGMEM;
