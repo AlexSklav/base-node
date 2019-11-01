@@ -72,7 +72,7 @@ public:
   static const uint8_t RETURN_MAX_PAYLOAD_EXCEEDED =  0x09;
 
   static const uint16_t MAX_PAYLOAD_LENGTH = 100;
-#ifndef DEFAULT_BAUD_RATE
+#ifndef BAUD_RATE
   static const uint32_t DEFAULT_BAUD_RATE = 115200;
 #endif
 
