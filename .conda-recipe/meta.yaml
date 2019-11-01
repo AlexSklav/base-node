@@ -60,8 +60,22 @@ build:
 
 requirements:
   build:
-    - python
+    - future
+    - numpy
+    - path_helpers >=0.7
+    - paver
+    - pip
+    - platformio >=3.5.2b2.post19
+    - platformio-framework-arduinoavr >=1.10620.2
+    - platformio-framework-arduinoteensy ==1.141.0
     - platformio-helpers >=0.8
+    - platformio-platform-atmelavr >=1.8.1.post1
+    - platformio-tool-avrdude >=1.60300.2
+    - platformio-tool-scons >=3.30001.0
+    - platformio-tool-teensy >=1.141.0
+    - platformio-toolchain-atmelavr >=1.40902.1
+    - platformio-toolchain-gccarmnoneeabi ==1.50401.0
+    - python
 
 outputs:
   - name: {{ PKG_NAME }}-dev
@@ -78,21 +92,6 @@ outputs:
     files:
       - Lib/site-packages/{{ MODULE_NAME }}
     requirements:
-      build:
-        - future
-        - paver
-        - pip
-        - platformio >=3.5.2b2.post19
-        - platformio-framework-arduinoavr >=1.10620.2
-        - platformio-framework-arduinoteensy ==1.141.0
-        - platformio-platform-atmelavr >=1.8.1.post1
-        - platformio-toolchain-atmelavr >=1.40902.1
-        - platformio-toolchain-gccarmnoneeabi ==1.50401.0
-        - platformio-tool-avrdude >=1.60300.2
-        - platformio-tool-scons >=3.30001.0
-        - platformio-tool-teensy >=1.141.0
-        - path_helpers >=0.7
-        - numpy
       run:
         - {{ pin_subpackage(PKG_NAME + '-dev', max_pin='x.x') }}
         - future
