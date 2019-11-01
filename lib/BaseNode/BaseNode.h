@@ -63,6 +63,15 @@ public:
   static constexpr uint8_t CMD_REBOOT = 0xA2;
   //! Reset configuration to default.
   static constexpr uint8_t CMD_RESET_CONFIG = 0xA3;
+  /**
+   * @brief Enable/disable receiving of broadcast messages (i.e., messages sent
+   * to address 0).
+   */
+  static constexpr uint8_t CMD_SET_GENERAL_CALL_ENABLED = 0xA4;
+   /**
+    * @brief Get current broadcast receiving setting.
+    */
+  static constexpr uint8_t CMD_GET_GENERAL_CALL_ENABLED = 0xA5;
 
   // reserved return codes
   static const uint8_t RETURN_OK =                    0x00;
@@ -146,6 +155,27 @@ protected:
     bytes_read_ += size;
     return result;
   }
+  /**
+   * @brief Enable/disable receiving of broadcasts, i.e., messages sent to
+   * address 0.
+   *
+   * @param state  If `true`, **enable**.  Otherwise, **disable**.
+   */
+  void general_call(bool state) {
+    if (state) {
+      // Enable receiving of broadcasts, i.e., messages sent to address 0.
+      TWAR |= 1;
+    } else {
+      // Disable receiving of broadcasts, i.e., messages sent to address 0.
+      TWAR &= ~0x01;
+    }
+  }
+  /**
+   * @brief Broadcast receiving setting.
+   *
+   * @return `true` if receiving of broadcasts is **enabled**.
+   */
+  bool general_call() const { return TWAR & 0x01; }
 
   String version_string(Version version);
 #ifndef NO_SERIAL
