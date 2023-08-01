@@ -7,75 +7,65 @@
 {% set MODULE_NAME = PKG_NAME.replace('-', '_') %}
 {% set PLATFORMIO_ENVS = '328p8MHz atmega8 uno teensy31'.split(' ') %}
 {% set LIB_NAME = 'BaseNode' %}
-# source will be downloaded prior to filling in jinja templates
-# Example assumes that this folder has setup.py in it
-source:
-  git_url: ../
-
 package:
   name: {{ PKG_NAME }}
   version: {{ GIT_VERSION }}
 
 build:
-  noarch: python
+  # If this is a new build for the same version, increment the build
+  # number. If you do not include this key, it defaults to 0.
+  number: 0
   script:
     # Build firmware
     - pio run
     # Copy Arduino library to Conda include directory
     - python -c
-        "import os.path; import os; import shutil; import platformio_helpers as pioh;
-        lib_src_dir = os.path.join(os.environ['SRC_DIR'], 'lib', '{{ LIB_NAME }}');
-        install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
-        shutil.copytree(lib_src_dir, install_dir);
-        "
+      "import os;
+      import shutil;
+      import platformio_helpers as pioh;
+      lib_src_dir = os.path.join('{{ SRC_DIR }}', 'lib', '{{ LIB_NAME }}');
+      install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
+      shutil.copytree(str(lib_src_dir), str(install_dir))
+      "
     # Copy MicroPython library to Conda MicroPython lib directory
     - python -c
-        "import os.path; import os; import shutil; import platformio_helpers as pioh;
-        lib_src_dir = os.path.join(os.environ['SRC_DIR'], 'micropython-src', '{{ MODULE_NAME }}');
-        install_dir = pioh.conda_bin_path().parent.joinpath('micropython-lib', '{{ MODULE_NAME }}');
-        shutil.copytree(lib_src_dir, install_dir);
-        "
+      "import os;
+      import shutil;
+      import platformio_helpers as pioh;
+      lib_src_dir = os.path.join('{{ SRC_DIR }}', 'micropython-src', '{{ MODULE_NAME }}');
+      install_dir = pioh.conda_bin_path().parent.joinpath('micropython-lib', '{{ MODULE_NAME }}');
+      shutil.copytree(str(lib_src_dir), str(install_dir))
+      "
     # Copy compiled firmware to Conda bin directory
     - python -c
-        "import os.path; import os; import shutil; import platformio_helpers as pioh;
-        SRC_DIR = os.environ['SRC_DIR'];
-        PIO_BIN_DIR = pioh.conda_bin_path().joinpath('{{ PKG_NAME }}');
-        created = (None if os.path.isdir(PIO_BIN_DIR)
-                   else os.makedirs(PIO_BIN_DIR));
-        shutil.copy2(os.path.join(SRC_DIR, 'platformio.ini'),
-                     os.path.join(PIO_BIN_DIR, 'platformio.ini'));
-        {% for pio_platform in PLATFORMIO_ENVS -%}
-        HEX_DIR = os.path.join(PIO_BIN_DIR, '{{ pio_platform }}');
-        os.makedirs(HEX_DIR);
-        shutil.copy2(os.path.join(SRC_DIR, '.pioenvs', '{{ pio_platform }}',
-                                  'firmware.hex'),
-                      os.path.join(PIO_BIN_DIR, '{{ pio_platform }}',
-                                   'firmware.hex'));
-        {%- endfor %}
+      "import os;
+      import shutil;
+      import platformio_helpers as pioh;
+      SRC_DIR = '{{ SRC_DIR }}';
+      PIO_BIN_DIR = pioh.conda_bin_path().joinpath('{{ PKG_NAME }}');
+      os.makedirs(PIO_BIN_DIR, exist_ok=True);
+      shutil.copy2(str(os.path.join(SRC_DIR, 'platformio.ini')),
+                   str(os.path.join(PIO_BIN_DIR, 'platformio.ini')));
+      {% for pio_platform in PLATFORMIO_ENVS -%}
+      HEX_DIR = os.path.join(PIO_BIN_DIR, '{{ pio_platform }}');
+      os.makedirs(HEX_DIR, exist_ok=True);
+      shutil.copy2(str(os.path.join(SRC_DIR, '.pio', 'build', '{{ pio_platform }}', 'firmware.hex')),
+                   str(os.path.join(HEX_DIR, 'firmware.hex')));
+      {%- endfor %}
         "
-    # Generate `setup.py` from `pavement.py` definition.
-    - python -m paver generate_setup
     # Install source directory as Python package.
     - python setup.py install --single-version-externally-managed --record record.txt
+  noarch: python
 
 requirements:
   build:
-    - future
+    - python {{ python }}
+    - versioneer
     - numpy
-    - path_helpers >=0.7
-    - paver
     - pip
-    - platformio >=3.5.2b2.post19
-    - platformio-framework-arduinoavr >=1.10620.2
-    - platformio-framework-arduinoteensy ==1.141.0
-    - platformio-helpers >=0.8
-    - platformio-platform-atmelavr >=1.8.1.post1
-    - platformio-tool-avrdude >=1.60300.2
-    - platformio-tool-scons >=3.30001.0
-    - platformio-tool-teensy >=1.141.0
-    - platformio-toolchain-atmelavr >=1.40902.1
-    - platformio-toolchain-gccarmnoneeabi ==1.50401.0
-    - python
+    - path-helpers
+    - platformio-helpers
+    - platformio
 
 outputs:
   - name: {{ PKG_NAME }}-dev
@@ -84,26 +74,31 @@ outputs:
       - share
     requirements:
       run:
-        - platformio-tool-avrdude >=1.60300.2
-        - platformio-tool-scons >=3.30001.0
-        - platformio-tool-teensy >=1.141.0
+        - platformio
+
   - name: {{ PKG_NAME }}
     noarch: python
     files:
       - Lib/site-packages/{{ MODULE_NAME }}
     requirements:
       run:
+        - python {{ python }}
         - {{ pin_subpackage(PKG_NAME + '-dev', max_pin='x.x') }}
-        - future
-        - platformio >=3.5.2b2.post19
-        - platformio-helpers >=0.8
-        - platformio-tool-scons >=3.30001.0
-        - platformio-tool-avrdude >=1.60300.2
-        - platformio-tool-teensy >=1.141.0
-        - python
-        - path_helpers >=0.7
         - numpy
+        - pip
+        - path-helpers
+        - platformio-helpers
+        - platformio
+
+    test:
+      imports:
+        - {{ MODULE_NAME }}
 
 about:
   home: https://github.com/sci-bots/base-node
   license: BSD
+
+# source will be downloaded prior to filling in jinja templates
+# Example assumes that this folder has setup.py in it
+source:
+  git_url: ../
