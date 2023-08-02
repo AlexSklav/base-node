@@ -79,7 +79,8 @@ outputs:
   - name: {{ PKG_NAME }}
     noarch: python
     files:
-      - Lib/site-packages/{{ MODULE_NAME }}
+      - Lib/site-packages/{{ MODULE_NAME }} # Windows
+      - {{ PREFIX }}/lib/python{{ python }}/site-packages/{{ MODULE_NAME }}
     requirements:
       run:
         - python {{ python }}
