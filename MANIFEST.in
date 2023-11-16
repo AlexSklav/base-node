@@ -1,8 +1,9 @@
 include README.md
-include pavement.py
-include paver-minilib.zip
+include file_handler.py
 include setup.py
 recursive-include base_node *
+exclude .DS_Store
+recursive-exclude base_node .DS_Store
 prune *.pyc
 include versioneer.py
 include base_node/_version.py

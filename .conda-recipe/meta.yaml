@@ -4,9 +4,8 @@
 {% set GIT_VERSION = GIT_DESCRIBE_TAG[1:] %}
 {% endif %}
 {% set PKG_NAME = 'base-node' %}
-{% set MODULE_NAME = PKG_NAME.replace('-', '_') %}
-{% set PLATFORMIO_ENVS = '328p8MHz atmega8 uno teensy31'.split(' ') %}
 {% set LIB_NAME = 'BaseNode' %}
+{% set MODULE_NAME = PKG_NAME.replace('-', '_') %}
 package:
   name: {{ PKG_NAME }}
   version: {{ GIT_VERSION }}
@@ -15,57 +14,24 @@ build:
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
   number: 0
-  script:
-    # Build firmware
-    - pio run
-    # Copy Arduino library to Conda include directory
-    - python -c
-      "import os;
-      import shutil;
-      import platformio_helpers as pioh;
-      lib_src_dir = os.path.join('{{ SRC_DIR }}', 'lib', '{{ LIB_NAME }}');
-      install_dir = pioh.conda_arduino_include_path().joinpath('{{ LIB_NAME }}');
-      shutil.copytree(str(lib_src_dir), str(install_dir))
-      "
-    # Copy MicroPython library to Conda MicroPython lib directory
-    - python -c
-      "import os;
-      import shutil;
-      import platformio_helpers as pioh;
-      lib_src_dir = os.path.join('{{ SRC_DIR }}', 'micropython-src', '{{ MODULE_NAME }}');
-      install_dir = pioh.conda_bin_path().parent.joinpath('micropython-lib', '{{ MODULE_NAME }}');
-      shutil.copytree(str(lib_src_dir), str(install_dir))
-      "
-    # Copy compiled firmware to Conda bin directory
-    - python -c
-      "import os;
-      import shutil;
-      import platformio_helpers as pioh;
-      SRC_DIR = '{{ SRC_DIR }}';
-      PIO_BIN_DIR = pioh.conda_bin_path().joinpath('{{ PKG_NAME }}');
-      os.makedirs(PIO_BIN_DIR, exist_ok=True);
-      shutil.copy2(str(os.path.join(SRC_DIR, 'platformio.ini')),
-                   str(os.path.join(PIO_BIN_DIR, 'platformio.ini')));
-      {% for pio_platform in PLATFORMIO_ENVS -%}
-      HEX_DIR = os.path.join(PIO_BIN_DIR, '{{ pio_platform }}');
-      os.makedirs(HEX_DIR, exist_ok=True);
-      shutil.copy2(str(os.path.join(SRC_DIR, '.pio', 'build', '{{ pio_platform }}', 'firmware.hex')),
-                   str(os.path.join(HEX_DIR, 'firmware.hex')));
-      {%- endfor %}
-        "
-    # Install source directory as Python package.
-    - python setup.py install --single-version-externally-managed --record record.txt
   noarch: python
+  script:
+    # Copy Arduino library to Conda include directory and generate Arduino `library.properties` file
+    - python file_handler.py {{ SRC_DIR }} {{ PREFIX }} {{ PKG_NAME }} {{ MODULE_NAME }} {{ LIB_NAME }}
+    # Run setup
+    - python setup.py install --single-version-externally-managed --record record.txt
 
 requirements:
   build:
-    - python {{ python }}
-    - versioneer
+    - python >=3.8
     - numpy
-    - pip
+    - platformio
+    - versioneer
     - path-helpers
     - platformio-helpers
-    - platformio
+    - dropbot-headers
+    - pip
+
 
 outputs:
   - name: {{ PKG_NAME }}-dev
@@ -75,31 +41,34 @@ outputs:
     requirements:
       run:
         - platformio
+        - dropbot-headers
 
   - name: {{ PKG_NAME }}
     noarch: python
     files:
-      - Lib/site-packages/{{ MODULE_NAME }} # [win]
-      - {{ PREFIX }}/lib/python{{ python }}/site-packages/{{ MODULE_NAME }} # [unix]
+      - {{ SP_DIR }}/{{ MODULE_NAME }}
     requirements:
       run:
-        - python {{ python }}
+        - python >=3.8
         - {{ pin_subpackage(PKG_NAME + '-dev', max_pin='x.x') }}
         - numpy
-        - pip
+        - platformio
+        - versioneer
         - path-helpers
         - platformio-helpers
-        - platformio
+        - pip
 
     test:
       imports:
         - {{ MODULE_NAME }}
 
 about:
-  home: https://github.com/sci-bots/base-node
+  home: https://github.com/sci-bots/{{ PKG_NAME }}
   license: BSD
+  summary: Common base class/API for embedded hardware devices.
 
 # source will be downloaded prior to filling in jinja templates
 # Example assumes that this folder has setup.py in it
 source:
-  git_url: ../
+#  git_url: ../
+  path: ..

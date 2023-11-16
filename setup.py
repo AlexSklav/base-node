@@ -7,7 +7,6 @@ import base_node
 
 import versioneer
 
-
 setup(name='base-node',
       version=versioneer.get_version(),
       cmdclass=versioneer.get_cmdclass(),
@@ -20,6 +19,7 @@ setup(name='base-node',
       include_package_data=True,
       python_requires='>=3.6'
       )
+
 
 class InstallArduinoLibrary(Command):
     description = "Install `BaseNode` as an Arduino library"
