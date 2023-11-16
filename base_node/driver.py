@@ -4,8 +4,6 @@ import uuid
 import numpy as np
 
 from struct import pack, unpack
-from six.moves import range
-from typing import List
 
 PERSISTENT_UUID_ADDRESS = 8
 
@@ -76,7 +74,7 @@ CONFIG_DTYPE = np.dtype([('version', [('major', 'uint16'),
                          ('pin_state', 'S9')])
 
 
-class BaseNode(object):
+class BaseNode:
     def __init__(self, proxy, address):
         self.proxy = proxy
         self.address = address
