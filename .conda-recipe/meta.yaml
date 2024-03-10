@@ -23,7 +23,7 @@ build:
 
 requirements:
   build:
-    - python >=3.6
+    - python {{ python }}
     - numpy
     - platformio
     - versioneer
@@ -58,9 +58,9 @@ outputs:
         - platformio-helpers
         - pip
 
-    test:
-      imports:
-        - {{ MODULE_NAME }}
+test:
+  imports:
+    - {{ MODULE_NAME }}
 
 about:
   home: https://github.com/sci-bots/{{ PKG_NAME }}
