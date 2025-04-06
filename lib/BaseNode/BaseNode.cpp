@@ -16,9 +16,9 @@
 
 
 #ifndef NO_WATCHDOG
-void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
+void base_node_wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 
-void wdt_init(void) {
+void base_node_wdt_init(void) {
   MCUSR = 0;
   wdt_disable();
   return;
@@ -40,8 +40,9 @@ void BaseNode::handle_wire_receive(int n_bytes) {
   cmd_ = Wire.read();
   n_bytes--;
   payload_length_ = n_bytes;
-  if (n_bytes <= MAX_PAYLOAD_LENGTH) {
-    for (int i = 0; i < n_bytes; i++) {
+  uint16_t bytes = static_cast<uint16_t>(n_bytes);
+  if (bytes <= MAX_PAYLOAD_LENGTH) {
+    for (uint16_t i = 0; i < bytes; i++) {
       buffer_[i] = Wire.read();
     }
   }
@@ -638,4 +639,3 @@ void BaseNode::set_i2c_address(uint8_t address) {
   save_config();
 }
 #endif  // #ifndef NO_EEPROM
-
