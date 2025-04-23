@@ -16,9 +16,9 @@
 
 
 #ifndef NO_WATCHDOG
-void base_node_wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
+void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 
-void base_node_wdt_init(void) {
+void wdt_init(void) {
   MCUSR = 0;
   wdt_disable();
   return;
@@ -639,3 +639,4 @@ void BaseNode::set_i2c_address(uint8_t address) {
   save_config();
 }
 #endif  // #ifndef NO_EEPROM
+
