@@ -10,3 +10,4 @@ paver-minilib.zip
 *.pyc
 .sconsign.dblite
 build/
+/.pio
