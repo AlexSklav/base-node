@@ -39,7 +39,7 @@ def get_includes() -> List[ph.path]:
 
         import base_node
         ...
-        print ' '.join(['-I%s' % i for i in base_node.get_includes()])
+        print(' '.join(['-I%s' % i for i in base_node.get_includes()]))
         ...
 
     """
@@ -60,7 +60,7 @@ def get_sources() -> List[str]:
 
         import base_node
         ...
-        print ' '.join(base_node.get_sources())
+        print(' '.join(base_node.get_sources()))
         ...
 
     """

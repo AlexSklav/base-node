@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-from setuptools import setup
+import shlex
+
+from setuptools import setup, Command
 from setuptools.command.build_py import build_py
-from distutils.cmd import Command
 import base_node
 
 import versioneer
@@ -55,7 +56,7 @@ class BuildFirmware(Command):
 
     def run(self):
         import subprocess
-        subprocess.run(f'scons {self.sconsflags}', shell=True)
+        subprocess.run(['scons'] + shlex.split(self.sconsflags))
 
 
 # Override sdist to ensure setup.py is generated and include custom build commands
